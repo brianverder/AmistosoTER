@@ -1,0 +1,132 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Modelo de Usuario
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teams          Team[]
+  matchRequests  MatchRequest[]
+  matchesAsUser1 Match[]        @relation("User1Matches")
+  matchesAsUser2 Match[]        @relation("User2Matches")
+}
+
+// Modelo de Equipo
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  matchRequests        MatchRequest[]
+  matchesAsTeam1       Match[]         @relation("Team1Matches")
+  matchesAsTeam2       Match[]         @relation("Team2Matches")
+  matchResultsAsWinner MatchResult[]   @relation("WinnerTeam")
+
+  // Estadísticas
+  gamesWon   Int @default(0)
+  gamesLost  Int @default(0)
+  gamesDrawn Int @default(0)
+  totalGames Int @default(0)
+
+  @@index([userId])
+}
+
+// Solicitud de Partido Amistoso
+model MatchRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  teamId      String
+  
+  footballType String?   // "11", "7", "5", "8", "otro"
+  fieldName    String?   // Nombre de la cancha
+  fieldAddress String?
+  country      String?   // País: Uruguay, Argentina, Brasil
+  state        String?   // Departamento/Provincia (opcional)
+  fieldPrice   Float?
+  matchDate    DateTime?
+  league       String?
+  
+  description  String?
+  status       String @default("active") // "active", "matched", "cancelled", "completed"
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team  Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  match Match?
+
+  @@index([userId])
+  @@index([teamId])
+  @@index([status])
+}
+
+// Match entre dos equipos
+model Match {
+  id             String    @id @default(cuid())
+  matchRequestId String    @unique
+  team1Id        String
+  team2Id        String
+  userId1        String
+  userId2        String
+  
+  status         String    @default("pending") // "pending", "confirmed", "completed", "cancelled"
+  
+  finalDate      DateTime?
+  finalAddress   String?
+  finalPrice     Float?
+  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  matchRequest MatchRequest @relation(fields: [matchRequestId], references: [id], onDelete: Cascade)
+  team1        Team         @relation("Team1Matches", fields: [team1Id], references: [id], onDelete: Cascade)
+  team2        Team         @relation("Team2Matches", fields: [team2Id], references: [id], onDelete: Cascade)
+  user1        User         @relation("User1Matches", fields: [userId1], references: [id], onDelete: Cascade)
+  user2        User         @relation("User2Matches", fields: [userId2], references: [id], onDelete: Cascade)
+  matchResult  MatchResult?
+
+  @@index([team1Id])
+  @@index([team2Id])
+  @@index([userId1])
+  @@index([userId2])
+  @@index([status])
+}
+
+// Resultado del Partido
+model MatchResult {
+  id         String   @id @default(cuid())
+  matchId    String   @unique
+  
+  team1Score Int
+  team2Score Int
+  winnerId   String?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  winner Team? @relation("WinnerTeam", fields: [winnerId], references: [id], onDelete: SetNull)
+
+  @@index([matchId])
+  @@index([winnerId])
+}
