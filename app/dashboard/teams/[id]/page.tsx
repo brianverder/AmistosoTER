@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
+import Toast, { ToastType } from '@/components/Toast';
+import ConfirmModal from '@/components/ConfirmModal';
+import LoadingState from '@/components/LoadingState';
 
 interface Team {
   id: string;
@@ -24,6 +27,8 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
   const [error, setError] = useState('');
   const [updating, setUpdating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     fetchTeam();
@@ -36,11 +41,12 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
         const data = await response.json();
         setTeam(data);
         setEditName(data.name);
+        setError('');
       } else {
         setError('Equipo no encontrado');
       }
     } catch (error) {
-      setError('Error al cargar equipo');
+      setError('Error de conexión. Intenta nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -48,6 +54,12 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!editName.trim()) {
+      setToast({ message: 'El nombre del equipo no puede estar vacío', type: 'warning' });
+      return;
+    }
+
     setError('');
     setUpdating(true);
 
@@ -62,23 +74,20 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
 
       if (response.ok) {
         setEditing(false);
+        setToast({ message: 'Equipo actualizado exitosamente', type: 'success' });
         fetchTeam();
       } else {
         const data = await response.json();
-        setError(data.error || 'Error al actualizar');
+        setToast({ message: data.error || 'Error al actualizar el equipo', type: 'error' });
       }
     } catch (error) {
-      setError('Error al actualizar equipo');
+      setToast({ message: 'Error de conexión. Verifica tu internet e intenta nuevamente.', type: 'error' });
     } finally {
       setUpdating(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm('¿Estás seguro de eliminar este equipo? Esta acción no se puede deshacer.')) {
-      return;
-    }
-
     setDeleting(true);
 
     try {
@@ -87,27 +96,26 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
       });
 
       if (response.ok) {
-        router.push('/dashboard/teams');
-        router.refresh();
+        setToast({ message: 'Equipo eliminado exitosamente', type: 'success' });
+        setTimeout(() => {
+          router.push('/dashboard/teams');
+          router.refresh();
+        }, 1000);
       } else {
-        setError('Error al eliminar equipo');
+        const data = await response.json();
+        setToast({ message: data.error || 'No se pudo eliminar el equipo', type: 'error' });
+        setDeleting(false);
       }
     } catch (error) {
-      setError('Error al eliminar equipo');
-    } finally {
+      setToast({ message: 'Error de conexión al eliminar. Intenta nuevamente.', type: 'error' });
       setDeleting(false);
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-4xl mb-2">⚽</div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Cargando datos del equipo..." icon="⚽" size="lg" />;
   }
 
   if (error || !team) {
@@ -183,7 +191,7 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
             <button onClick={() => setEditing(true)} className="btn-secondary">
               ✏️ Editar Nombre
             </button>
-            <button onClick={handleDelete} disabled={deleting} className="btn-danger flex items-center gap-2">
+            <button onClick={() => setShowDeleteModal(true)} disabled={deleting} className="btn-danger flex items-center gap-2">
               {deleting && <Spinner size="sm" />}
               {deleting ? 'Eliminando...' : '🗑️ Eliminar Equipo'}
             </button>
@@ -252,6 +260,28 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
           </div>
         )}
       </div>
+
+      {/* Toast de notificaciones */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
+      {/* Modal de confirmación de eliminación */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="¿Eliminar equipo?"
+        message={`Estás a punto de eliminar "${team?.name}". Esta acción no se puede deshacer y se perderán todas las estadísticas asociadas.`}
+        confirmText="Sí, eliminar equipo"
+        cancelText="Cancelar"
+        type="danger"
+        isLoading={deleting}
+      />
     </div>
   );
 }

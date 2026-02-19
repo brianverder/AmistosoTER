@@ -40,11 +40,25 @@ export class MatchRequestsRepository {
   /**
    * Busca solicitudes de un usuario
    */
-  static async findByUserId(userId: string, status?: string) {
+  static async findByUserId(
+    userId: string,
+    status?: string,
+    filters?: { footballType?: string; country?: string }
+  ) {
     const where: Prisma.MatchRequestWhereInput = { userId };
 
     if (status) {
       where.status = status;
+    }
+
+    if (filters?.footballType) {
+      where.footballType = filters.footballType;
+    }
+
+    if (filters?.country) {
+      where.country = {
+        equals: filters.country,
+      };
     }
 
     return await prisma.matchRequest.findMany({
@@ -87,6 +101,7 @@ export class MatchRequestsRepository {
   static async findActive(filters?: {
     excludeUserId?: string;
     footballType?: string;
+    country?: string;
     limit?: number;
     offset?: number;
   }) {
@@ -100,6 +115,12 @@ export class MatchRequestsRepository {
 
     if (filters?.footballType) {
       where.footballType = filters.footballType;
+    }
+
+    if (filters?.country) {
+      where.country = {
+        equals: filters.country,
+      };
     }
 
     return await prisma.matchRequest.findMany({
@@ -127,6 +148,7 @@ export class MatchRequestsRepository {
     userId?: string;
     status?: string;
     footballType?: string;
+    country?: string;
   }) {
     const where: Prisma.MatchRequestWhereInput = {};
 
@@ -140,6 +162,12 @@ export class MatchRequestsRepository {
 
     if (filters?.footballType) {
       where.footballType = filters.footballType;
+    }
+
+    if (filters?.country) {
+      where.country = {
+        equals: filters.country,
+      };
     }
 
     return await prisma.matchRequest.count({ where });

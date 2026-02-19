@@ -14,12 +14,16 @@ export class MatchRequestsService {
   /**
    * Obtiene solicitudes de un usuario
    */
-  static async getUserRequests(userId: string, status?: string) {
+  static async getUserRequests(
+    userId: string,
+    status?: string,
+    filters?: { footballType?: string; country?: string }
+  ) {
     if (!userId) {
       throw new ValidationError('User ID es requerido');
     }
 
-    return await MatchRequestsRepository.findByUserId(userId, status);
+    return await MatchRequestsRepository.findByUserId(userId, status, filters);
   }
 
   /**
@@ -28,6 +32,7 @@ export class MatchRequestsService {
   static async getAvailableRequests(filters?: {
     excludeUserId?: string;
     footballType?: string;
+    country?: string;
     page?: number;
     pageSize?: number;
   }) {
@@ -39,12 +44,14 @@ export class MatchRequestsService {
       MatchRequestsRepository.findActive({
         excludeUserId: filters?.excludeUserId,
         footballType: filters?.footballType,
+        country: filters?.country,
         limit: pageSize,
         offset,
       }),
       MatchRequestsRepository.count({
         status: 'active',
         footballType: filters?.footballType,
+        country: filters?.country,
       }),
     ]);
 
@@ -115,21 +122,8 @@ export class MatchRequestsService {
       throw new UnauthorizedError('El equipo no te pertenece');
     }
 
-    // Verificar que el equipo no tenga otra solicitud activa
-    const existingRequests = await MatchRequestsRepository.findByUserId(
-      data.userId,
-      'active'
-    );
-
-    const hasActiveRequest = existingRequests.some(
-      (req) => req.teamId === data.teamId
-    );
-
-    if (hasActiveRequest) {
-      throw new BusinessRuleError(
-        'El equipo ya tiene una solicitud activa. Cancela la anterior antes de crear una nueva.'
-      );
-    }
+    // Restricción eliminada: Ahora un equipo puede tener múltiples solicitudes activas
+    // Esto permite mayor flexibilidad para buscar partidos en diferentes fechas/ubicaciones
 
     // Parsear fecha si se proporciona
     if (data.date) {

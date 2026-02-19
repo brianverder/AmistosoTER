@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Spinner from '@/components/Spinner';
+import Toast, { ToastType } from '@/components/Toast';
+import LoadingState from '@/components/LoadingState';
 
 interface Team {
   id: string;
@@ -15,8 +17,10 @@ export default function NewRequestPage() {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingTeams, setLoadingTeams] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [toast, setToast] = useState<{message: string; type: ToastType} | null>(null);
   const [formData, setFormData] = useState({
     teamId: '',
     footballType: '',
@@ -40,9 +44,13 @@ export default function NewRequestPage() {
       if (response.ok) {
         const data = await response.json();
         setTeams(data);
+      } else {
+        setToast({ message: 'Error al cargar tus equipos', type: 'error' });
       }
     } catch (error) {
-      console.error('Error fetching teams:', error);
+      setToast({ message: 'Error de conexión al cargar equipos', type: 'error' });
+    } finally {
+      setLoadingTeams(false);
     }
   };
 
@@ -52,6 +60,14 @@ export default function NewRequestPage() {
 
     if (!formData.teamId) {
       setError('Debes seleccionar un equipo');
+      setToast({ message: 'Por favor, selecciona un equipo', type: 'warning' });
+      return;
+    }
+
+    // Validación adicional de precio
+    if (formData.fieldPrice && parseFloat(formData.fieldPrice) < 0) {
+      setError('El precio no puede ser negativo');
+      setToast({ message: 'El precio de la cancha debe ser mayor o igual a 0', type: 'warning' });
       return;
     }
 
@@ -82,20 +98,25 @@ export default function NewRequestPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        setError(data.error || 'Error al crear solicitud');
+        const errorMsg = data.error || 'Error al crear la solicitud';
+        setError(errorMsg);
+        setToast({ message: errorMsg, type: 'error' });
         return;
       }
 
       // Mostrar mensaje de éxito
       setSuccess(true);
+      setToast({ message: '¡Solicitud creada exitosamente! Redirigiendo...', type: 'success' });
       
-      // Redirigir después de 2 segundos
+      // Redirigir después de 1.5 segundos
       setTimeout(() => {
         router.push('/dashboard/requests');
         router.refresh();
-      }, 2000);
+      }, 1500);
     } catch (error) {
-      setError('Error al crear solicitud');
+      const errorMsg = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      setError(errorMsg);
+      setToast({ message: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -103,31 +124,35 @@ export default function NewRequestPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-8">
-        <Link
-          href="/dashboard/requests"
-          className="text-primary hover:underline mb-4 inline-block"
-        >
-          ← Volver a Solicitudes
-        </Link>
-        <div className="flex items-center gap-4 mb-4">
-          <Image
-            src="https://tercer-tiempo.com/images/logo_tercertiempoNegro.png"
-            alt="Tercer Tiempo"
-            width={60}
-            height={60}
-            className="object-contain"
-          />
-          <div>
-            <h1 className="text-3xl font-bold text-primary">
-              Nueva Solicitud de Partido
-            </h1>
-            <p className="text-gray-600">
-              Publica los detalles de tu partido para encontrar un rival
-            </p>
+      {loadingTeams ? (
+        <LoadingState message="Cargando tus equipos..." icon="⚽" />
+      ) : (
+        <>
+          <div className="mb-8">
+            <Link
+              href="/dashboard/requests"
+              className="text-primary hover:underline mb-4 inline-block"
+            >
+              ← Volver a Solicitudes
+            </Link>
+            <div className="flex items-center gap-4 mb-4">
+              <Image
+                src="https://tercer-tiempo.com/images/logo_tercertiempoNegro.png"
+                alt="Tercer Tiempo"
+                width={60}
+                height={60}
+                className="object-contain"
+              />
+              <div>
+                <h1 className="text-3xl font-bold text-primary">
+                  Nueva Solicitud de Partido
+                </h1>
+                <p className="text-gray-600">
+                  Publica los detalles de tu partido para encontrar un rival
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
       {/* Mensaje de éxito */}
       {success && (
@@ -382,6 +407,17 @@ export default function NewRequestPage() {
           <li>✓ <strong>Estado:</strong> Tu solicitud se publicará como "Activa" automáticamente</li>
         </ul>
       </div>
+        </>
+      )}
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

@@ -6,10 +6,13 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import Spinner from '@/components/Spinner';
+import Toast, { ToastType } from '@/components/Toast';
+import LoadingState from '@/components/LoadingState';
 
 interface Team {
   id: string;
   name: string;
+  instagram?: string | null;
   gamesPlayed?: number;
   gamesWon?: number;
   gamesLost?: number;
@@ -58,6 +61,7 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
   const [matching, setMatching] = useState(false);
   const [error, setError] = useState('');
   const [showMatchModal, setShowMatchModal] = useState(false);
+  const [toast, setToast] = useState<{message: string; type: ToastType} | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -83,7 +87,8 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
         }
       }
     } catch (error) {
-      setError('Error al cargar datos');
+      setError('Error de conexión. Verifica tu internet e intenta nuevamente.');
+      setToast({ message: 'Error al cargar el partido. Por favor, intenta nuevamente.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -97,16 +102,17 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
     }
 
     if (userTeams.length === 0) {
-      setError('Necesitas crear un equipo primero');
+      setToast({ message: 'Necesitas crear un equipo primero para aceptar partidos', type: 'warning' });
       return;
     }
 
+    setError('');
     setShowMatchModal(true);
   };
 
   const handleConfirmMatch = async () => {
     if (!selectedTeam) {
-      setError('Debes seleccionar un equipo');
+      setToast({ message: 'Debes seleccionar un equipo', type: 'warning' });
       return;
     }
 
@@ -124,16 +130,23 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
 
       if (!response.ok) {
         const data = await response.json();
-        setError(data.error || 'Error al crear match');
+        const errorMsg = data.error || 'Error al crear el match';
+        setError(errorMsg);
+        setToast({ message: errorMsg, type: 'error' });
         setMatching(false);
         return;
       }
 
+      // Éxito: mostrar mensaje y recargar
+      setToast({ message: '¡Match confirmado! Ya pueden coordinar los detalles del partido.', type: 'success' });
+      setShowMatchModal(false);
+      
       // Recargar datos para mostrar el match
       await fetchData();
-      setShowMatchModal(false);
     } catch (error) {
-      setError('Error al crear match');
+      const errorMsg = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      setError(errorMsg);
+      setToast({ message: errorMsg, type: 'error' });
     } finally {
       setMatching(false);
     }
@@ -150,14 +163,7 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-5xl mb-4 animate-bounce">⚽</div>
-          <p className="text-gray-600 text-lg">Cargando partido...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState size="lg" message="Cargando información del partido..." icon="⚽" />;
   }
 
   if (error || !request) {
@@ -327,6 +333,11 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
                           <strong>Teléfono:</strong> {request.match.userA.phone}
                         </p>
                       )}
+                      {request.match.teamA.instagram && (
+                        <p className="text-sm text-gray-700">
+                          <strong>Instagram:</strong> {request.match.teamA.instagram}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -345,6 +356,11 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
                       {request.match.userB.phone && (
                         <p className="text-sm text-gray-700">
                           <strong>Teléfono:</strong> {request.match.userB.phone}
+                        </p>
+                      )}
+                      {request.match.teamB.instagram && (
+                        <p className="text-sm text-gray-700">
+                          <strong>Instagram:</strong> {request.match.teamB.instagram}
                         </p>
                       )}
                     </div>
@@ -493,6 +509,15 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
             </div>
           </div>
         </div>
+      )}
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   );

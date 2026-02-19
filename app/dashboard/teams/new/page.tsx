@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
+import Toast, { ToastType } from '@/components/Toast';
 
 export default function NewTeamPage() {
   const router = useRouter();
   const [teamName, setTeamName] = useState('');
+  const [instagram, setInstagram] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{message: string; type: ToastType} | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,30 +20,55 @@ export default function NewTeamPage() {
 
     if (!teamName.trim()) {
       setError('El nombre del equipo es requerido');
+      setToast({ message: 'Por favor, ingresa un nombre para el equipo', type: 'warning' });
+      return;
+    }
+
+    if (teamName.trim().length < 3) {
+      setError('El nombre debe tener al menos 3 caracteres');
+      setToast({ message: 'El nombre del equipo es demasiado corto', type: 'warning' });
       return;
     }
 
     setLoading(true);
 
     try {
+      const payload: { name: string; instagram?: string } = {
+        name: teamName,
+      };
+
+      if (instagram.trim()) {
+        payload.instagram = instagram.trim();
+      }
+
       const response = await fetch('/api/teams', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: teamName }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        setError(data.error || 'Error al crear equipo');
+        const errorMsg = data.error || 'Error al crear el equipo';
+        setError(errorMsg);
+        setToast({ message: errorMsg, type: 'error' });
         return;
       }
 
-      router.push('/dashboard/teams');
-      router.refresh();
+      // Éxito
+      setToast({ message: '¡Equipo creado exitosamente!', type: 'success' });
+      
+      // Redirigir después de un breve delay para mostrar el toast
+      setTimeout(() => {
+        router.push('/dashboard/teams');
+        router.refresh();
+      }, 1000);
     } catch (error) {
-      setError('Error al crear equipo');
+      const errorMsg = 'Error de conexión. Verifica tu internet e intenta nuevamente.';
+      setError(errorMsg);
+      setToast({ message: errorMsg, type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -88,6 +116,24 @@ export default function NewTeamPage() {
             </p>
           </div>
 
+          <div>
+            <label htmlFor="instagram" className="label">
+              Instagram (opcional)
+            </label>
+            <input
+              id="instagram"
+              type="text"
+              className="input"
+              placeholder="Ej: @loscracksfc"
+              value={instagram}
+              onChange={(e) => setInstagram(e.target.value)}
+              maxLength={100}
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              Se mostrará como dato de contacto cuando hagas match
+            </p>
+          </div>
+
           <div className="flex gap-4">
             <button
               type="submit"
@@ -111,6 +157,15 @@ export default function NewTeamPage() {
           grupos de amigos o si tienes varios equipos bajo tu gestión.
         </p>
       </div>
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

@@ -85,7 +85,7 @@ export class TeamsService {
   /**
    * Crea un nuevo equipo
    */
-  static async createTeam(data: { name: string; userId: string }) {
+  static async createTeam(data: { name: string; userId: string; instagram?: string }) {
     // Validaciones
     if (!data.name || data.name.trim().length === 0) {
       throw new ValidationError('El nombre del equipo es requerido');
@@ -101,10 +101,16 @@ export class TeamsService {
 
     // Sanitizar nombre
     const sanitizedName = data.name.trim();
+    const sanitizedInstagram = data.instagram?.trim() || undefined;
+
+    if (sanitizedInstagram && sanitizedInstagram.length > 100) {
+      throw new ValidationError('El Instagram no puede exceder 100 caracteres');
+    }
 
     return await TeamsRepository.create({
       name: sanitizedName,
       userId: data.userId,
+      instagram: sanitizedInstagram,
     });
   }
 

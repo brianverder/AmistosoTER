@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
+import LoadingState from '@/components/LoadingState';
+import Toast, { ToastType } from '@/components/Toast';
 
 interface MatchRequest {
   id: string;
@@ -35,6 +37,7 @@ export default function PublicRequestsPage() {
   const [activeTab, setActiveTab] = useState<'active' | 'historical'>('active');
   const [requests, setRequests] = useState<MatchRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{message: string; type: ToastType} | null>(null);
 
   useEffect(() => {
     fetchRequests();
@@ -48,9 +51,11 @@ export default function PublicRequestsPage() {
       if (response.ok) {
         const data = await response.json();
         setRequests(data);
+      } else {
+        setToast({ message: 'Error al cargar partidos. Intenta nuevamente.', type: 'error' });
       }
     } catch (error) {
-      console.error('Error fetching requests:', error);
+      setToast({ message: 'Error de conexión. Verifica tu internet.', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -163,10 +168,10 @@ export default function PublicRequestsPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-16">
-            <div className="text-5xl mb-4 animate-bounce">⚽</div>
-            <p className="text-gray-600 text-lg">Cargando partidos...</p>
-          </div>
+          <LoadingState 
+            message={activeTab === 'active' ? 'Buscando partidos disponibles...' : 'Cargando histórico de partidos...'} 
+            icon="⚽" 
+          />
         ) : requests.length === 0 ? (
           <div className="card text-center py-16">
             <div className="text-7xl mb-4">
@@ -309,6 +314,15 @@ export default function PublicRequestsPage() {
           </div>
         )}
       </div>
+
+      {/* Toast Notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

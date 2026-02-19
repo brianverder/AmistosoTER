@@ -17,19 +17,32 @@ export async function GET(request: Request) {
     const mode = searchParams.get('mode'); // 'my' o 'available'
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    const footballType = searchParams.get('footballType') || undefined;
+    const rawCountry = searchParams.get('country')?.trim();
+    const allowedCountries = ['Uruguay', 'Argentina', 'Brasil'];
+    const country = rawCountry && allowedCountries.includes(rawCountry)
+      ? rawCountry
+      : undefined;
 
     let result;
 
     if (mode === 'my') {
       // Solicitudes del usuario
       const matchRequests = await MatchRequestsService.getUserRequests(
-        session.user.id
+        session.user.id,
+        undefined,
+        {
+          footballType,
+          country,
+        }
       );
       result = matchRequests;
     } else {
       // Solicitudes disponibles
       result = await MatchRequestsService.getAvailableRequests({
         excludeUserId: session.user.id,
+        footballType,
+        country,
         page,
         pageSize
       });

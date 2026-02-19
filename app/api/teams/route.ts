@@ -35,11 +35,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
-    const { name } = await request.json();
+    const { name, instagram } = await request.json();
 
     const team = await TeamsService.createTeam({
       userId: session.user.id,
       name,
+      instagram,
     });
 
     return NextResponse.json(team, { status: 201 });

@@ -5,6 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
+import Toast, { ToastType } from '@/components/Toast';
+import LoadingState from '@/components/LoadingState';
 
 interface Match {
   id: string;
@@ -20,10 +22,12 @@ interface Match {
   team1: {
     id: string;
     name: string;
+    instagram?: string | null;
   };
   team2: {
     id: string;
     name: string;
+    instagram?: string | null;
   };
   user1: {
     id: string;
@@ -65,6 +69,7 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [scores, setScores] = useState({
     team1Score: '',
     team2Score: '',
@@ -80,11 +85,12 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
       if (response.ok) {
         const data = await response.json();
         setMatch(data);
+        setError('');
       } else {
         setError('Match no encontrado');
       }
     } catch (error) {
-      setError('Error al cargar match');
+      setError('Error de conexión. Intenta nuevamente.');
     } finally {
       setLoading(false);
     }
@@ -95,7 +101,15 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
     setError('');
 
     if (!scores.team1Score || !scores.team2Score) {
-      setError('Ambos marcadores son requeridos');
+      setToast({ message: 'Debes ingresar ambos marcadores para registrar el resultado', type: 'warning' });
+      return;
+    }
+
+    const team1Score = parseInt(scores.team1Score);
+    const team2Score = parseInt(scores.team2Score);
+
+    if (team1Score < 0 || team2Score < 0) {
+      setToast({ message: 'Los marcadores no pueden ser negativos', type: 'warning' });
       return;
     }
 
@@ -108,35 +122,31 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          team1Score: parseInt(scores.team1Score),
-          team2Score: parseInt(scores.team2Score),
+          team1Score,
+          team2Score,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json();
-        setError(data.error || 'Error al registrar resultado');
+        setToast({ message: data.error || 'Error al registrar el resultado', type: 'error' });
+        setSubmitting(false);
         return;
       }
 
+      setToast({ message: '¡Resultado registrado exitosamente! Las estadísticas se han actualizado.', type: 'success' });
       // Recargar el match
       fetchMatch();
+      setScores({ team1Score: '', team2Score: '' });
     } catch (error) {
-      setError('Error al registrar resultado');
+      setToast({ message: 'Error de conexión. Verifica tu internet e intenta nuevamente.', type: 'error' });
     } finally {
       setSubmitting(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="text-4xl mb-2">⚽</div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
-      </div>
-    );
+    return <LoadingState message="Cargando información del partido..." icon="⚽" size="lg" />;
   }
 
   if (error || !match) {
@@ -157,6 +167,7 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
   const userTeam = isUserTeam1 ? match.team1 : match.team2;
   const opponentTeam = isUserTeam1 ? match.team2 : match.team1;
   const opponentUser = isUserTeam1 ? match.user2 : match.user1;
+  const opponentInstagram = opponentTeam.instagram?.trim().replace(/^@/, '');
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -338,6 +349,19 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
                   <span className="font-semibold">Teléfono:</span> {opponentUser.phone}
                 </p>
               )}
+              {opponentInstagram && (
+                <p>
+                  <span className="font-semibold">Instagram:</span>{' '}
+                  <a
+                    href={`https://instagram.com/${opponentInstagram}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    @{opponentInstagram}
+                  </a>
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -439,6 +463,15 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
           </div>
         )}
       </div>
+
+      {/* Toast de notificaciones */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

@@ -6,6 +6,7 @@
 export interface Team {
   id: string;
   name: string;
+  instagram?: string | null;
   userId: string;
   gamesWon: number;
   gamesLost: number;
@@ -23,6 +24,7 @@ export interface TeamStats {
 
 export interface CreateTeamDTO {
   name: string;
+  instagram?: string;
 }
 
 export interface UpdateTeamDTO {

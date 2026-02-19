@@ -69,9 +69,9 @@ export function validatePassword(password: string): ValidatePasswordResult {
     return { isValid: false, error: 'Contraseña es requerida' };
   }
 
-  // Mínimo 8 caracteres
-  if (password.length < 8) {
-    return { isValid: false, error: 'La contraseña debe tener al menos 8 caracteres' };
+  // Mínimo 6 caracteres
+  if (password.length < 6) {
+    return { isValid: false, error: 'La contraseña debe tener al menos 6 caracteres' };
   }
 
   // Máximo 72 caracteres (límite de bcrypt)
@@ -79,30 +79,12 @@ export function validatePassword(password: string): ValidatePasswordResult {
     return { isValid: false, error: 'La contraseña no puede exceder 72 caracteres' };
   }
 
-  // Al menos una mayúscula
-  if (!/[A-Z]/.test(password)) {
-    return { isValid: false, error: 'La contraseña debe contener al menos una mayúscula' };
-  }
-
-  // Al menos una minúscula
-  if (!/[a-z]/.test(password)) {
-    return { isValid: false, error: 'La contraseña debe contener al menos una minúscula' };
-  }
-
-  // Al menos un número
-  if (!/\d/.test(password)) {
-    return { isValid: false, error: 'La contraseña debe contener al menos un número' };
-  }
-
-  // Calcular fuerza
-  let strength: 'weak' | 'medium' | 'strong' = 'medium';
-  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-  const isLong = password.length >= 12;
-
-  if (hasSpecialChar && isLong) {
+  // Calcular fuerza basada solo en longitud
+  let strength: 'weak' | 'medium' | 'strong' = 'weak';
+  if (password.length >= 12) {
     strength = 'strong';
-  } else if (password.length < 10) {
-    strength = 'weak';
+  } else if (password.length >= 8) {
+    strength = 'medium';
   }
 
   return { isValid: true, strength };

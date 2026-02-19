@@ -108,11 +108,12 @@ export class TeamsRepository {
   /**
    * Crea un nuevo equipo
    */
-  static async create(data: { name: string; userId: string }) {
+  static async create(data: { name: string; userId: string; instagram?: string }) {
     return await prisma.team.create({
       data: {
         name: data.name,
         userId: data.userId,
+        instagram: data.instagram,
         gamesWon: 0,
         gamesLost: 0,
         gamesDrawn: 0,

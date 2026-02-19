@@ -43,6 +43,7 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
+                instagram: true,
                 userId: true,
               },
             },
@@ -50,6 +51,7 @@ export async function GET(
               select: {
                 id: true,
                 name: true,
+                instagram: true,
                 userId: true,
               },
             },
@@ -93,6 +95,8 @@ export async function GET(
         matchRequest.match.userA.phone = null;
         matchRequest.match.userB.email = '';
         matchRequest.match.userB.phone = null;
+        matchRequest.match.teamA.instagram = null;
+        matchRequest.match.teamB.instagram = null;
       }
     }
 
