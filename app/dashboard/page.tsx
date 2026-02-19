@@ -2,6 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import AdSenseBanner from '@/components/AdSenseBanner';
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -138,6 +139,13 @@ export default async function DashboardPage() {
           </Link>
         ))}
       </div>
+
+      <AdSenseBanner
+        adSlot={process.env.NEXT_PUBLIC_ADSENSE_DASHBOARD_INLINE_SLOT || ''}
+        className="mb-2"
+        minHeight={100}
+        adFormat="horizontal"
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6">
         {/* Columna Principal */}
@@ -360,6 +368,13 @@ export default async function DashboardPage() {
               </Link>
             </div>
           </div>
+
+          <AdSenseBanner
+            adSlot={process.env.NEXT_PUBLIC_ADSENSE_DASHBOARD_MULTIPLEX_SLOT || ''}
+            className="mt-2"
+            minHeight={250}
+            adFormat="auto"
+          />
         </div>
 
         {/* Columna Derecha - TOP 5 Ganadores */}

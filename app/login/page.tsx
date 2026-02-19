@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -15,6 +15,24 @@ export default function LoginPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [usersCount, setUsersCount] = useState('');
+
+  useEffect(() => {
+    const fetchUsersCount = async () => {
+      try {
+        const response = await fetch('/api/public/users-count', { cache: 'no-store' });
+        if (!response.ok) return;
+
+        const data = await response.json();
+        if (typeof data.count === 'number') {
+          setUsersCount(String(data.count));
+        }
+      } catch {
+      }
+    };
+
+    fetchUsersCount();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,7 +81,7 @@ export default function LoginPage() {
         </div>
 
         {/* Formulario */}
-        <div className="card">
+        <div className="card" data-registered-users={usersCount || '0'}>
           <h2 className="text-2xl font-bold text-primary mb-6">Iniciar Sesión</h2>
 
           {error && (
@@ -73,6 +91,13 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="hidden"
+              name="registeredUsersCount"
+              value={usersCount}
+              readOnly
+            />
+
             <div>
               <label htmlFor="email" className="label">
                 Email

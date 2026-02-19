@@ -6,6 +6,7 @@ import Spinner from '@/components/Spinner';
 import Toast, { ToastType } from '@/components/Toast';
 import ConfirmModal from '@/components/ConfirmModal';
 import LoadingState from '@/components/LoadingState';
+import AdSenseBanner from '@/components/AdSenseBanner';
 
 interface MatchRequest {
   id: string;
@@ -213,6 +214,13 @@ export default function RequestsPage() {
         </div>
       </div>
 
+      <AdSenseBanner
+        adSlot={process.env.NEXT_PUBLIC_ADSENSE_REQUESTS_INLINE_SLOT || ''}
+        className="mb-6"
+        minHeight={100}
+        adFormat="horizontal"
+      />
+
       {loading ? (
         <LoadingState 
           message={activeTab === 'my' ? 'Cargando tus solicitudes...' : 'Buscando partidos disponibles...'}
@@ -412,6 +420,13 @@ export default function RequestsPage() {
         cancelText="Cancelar"
         type="danger"
         isLoading={!!deletingId}
+      />
+
+      <AdSenseBanner
+        adSlot={process.env.NEXT_PUBLIC_ADSENSE_REQUESTS_MULTIPLEX_SLOT || ''}
+        className="mt-8"
+        minHeight={250}
+        adFormat="auto"
       />
     </div>
   );
