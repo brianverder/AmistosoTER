@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useSession } from 'next-auth/react';
 import LoadingState from '@/components/LoadingState';
 import Toast, { ToastType } from '@/components/Toast';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface MatchRequest {
   id: string;
@@ -47,7 +48,7 @@ export default function PublicRequestsPage() {
     setLoading(true);
     try {
       const status = activeTab === 'active' ? 'active' : 'historical';
-      const response = await fetch(`/api/public/requests?status=${status}`);
+      const response = await fetch(withBasePath(`/api/public/requests?status=${status}`));
       if (response.ok) {
         const data = await response.json();
         setRequests(data);

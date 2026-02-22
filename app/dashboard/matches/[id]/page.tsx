@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import Toast, { ToastType } from '@/components/Toast';
 import LoadingState from '@/components/LoadingState';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface Match {
   id: string;
@@ -81,7 +82,7 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
 
   const fetchMatch = async () => {
     try {
-      const response = await fetch(`/api/matches/${params.id}`);
+      const response = await fetch(withBasePath(`/api/matches/${params.id}`));
       if (response.ok) {
         const data = await response.json();
         setMatch(data);
@@ -116,7 +117,7 @@ export default function MatchDetailPage({ params }: { params: { id: string } }) 
     setSubmitting(true);
 
     try {
-      const response = await fetch(`/api/matches/${params.id}/result`, {
+      const response = await fetch(withBasePath(`/api/matches/${params.id}/result`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

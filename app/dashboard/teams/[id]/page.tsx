@@ -7,6 +7,7 @@ import Spinner from '@/components/Spinner';
 import Toast, { ToastType } from '@/components/Toast';
 import ConfirmModal from '@/components/ConfirmModal';
 import LoadingState from '@/components/LoadingState';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface Team {
   id: string;
@@ -36,7 +37,7 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch(`/api/teams/${params.id}`);
+      const response = await fetch(withBasePath(`/api/teams/${params.id}`));
       if (response.ok) {
         const data = await response.json();
         setTeam(data);
@@ -64,7 +65,7 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
     setUpdating(true);
 
     try {
-      const response = await fetch(`/api/teams/${params.id}`, {
+      const response = await fetch(withBasePath(`/api/teams/${params.id}`), {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +92,7 @@ export default function TeamDetailPage({ params }: { params: { id: string } }) {
     setDeleting(true);
 
     try {
-      const response = await fetch(`/api/teams/${params.id}`, {
+      const response = await fetch(withBasePath(`/api/teams/${params.id}`), {
         method: 'DELETE',
       });
 

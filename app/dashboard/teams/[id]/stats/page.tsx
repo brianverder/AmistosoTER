@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface TeamStats {
   id: string;
@@ -39,7 +40,7 @@ export default function TeamStatsPage({ params }: { params: { id: string } }) {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch(`/api/teams/${params.id}/stats`);
+      const response = await fetch(withBasePath(`/api/teams/${params.id}/stats`));
       if (response.ok) {
         const statsData = await response.json();
         setData(statsData);

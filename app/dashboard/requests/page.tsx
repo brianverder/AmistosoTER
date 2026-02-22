@@ -7,6 +7,7 @@ import Toast, { ToastType } from '@/components/Toast';
 import ConfirmModal from '@/components/ConfirmModal';
 import LoadingState from '@/components/LoadingState';
 import AdSenseBanner from '@/components/AdSenseBanner';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface MatchRequest {
   id: string;
@@ -62,7 +63,7 @@ export default function RequestsPage() {
         params.set('country', countryFilter.trim());
       }
 
-      const response = await fetch(`/api/requests?${params.toString()}`);
+      const response = await fetch(withBasePath(`/api/requests?${params.toString()}`));
       if (response.ok) {
         const data = await response.json();
         // Si es modo "available", la respuesta tiene formato { requests: [...], pagination: {...} }
@@ -89,7 +90,7 @@ export default function RequestsPage() {
     setDeletingId(id);
 
     try {
-      const response = await fetch(`/api/requests/${id}`, {
+      const response = await fetch(withBasePath(`/api/requests/${id}`), {
         method: 'DELETE',
       });
 

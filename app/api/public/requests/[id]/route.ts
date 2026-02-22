@@ -22,10 +22,10 @@ export async function GET(
           select: {
             id: true,
             name: true,
-            gamesPlayed: true,
+            totalGames: true,
             gamesWon: true,
             gamesLost: true,
-            gamesDraw: true,
+            gamesDrawn: true,
           },
         },
         user: {
@@ -100,7 +100,16 @@ export async function GET(
       }
     }
 
-    return NextResponse.json(matchRequest);
+    const response = {
+      ...matchRequest,
+      team: {
+        ...matchRequest.team,
+        gamesPlayed: matchRequest.team.totalGames,
+        gamesDraw: matchRequest.team.gamesDrawn,
+      },
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching request:', error);
     return NextResponse.json(

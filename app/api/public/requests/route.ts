@@ -34,8 +34,9 @@ export async function GET(request: Request) {
           select: {
             id: true,
             name: true,
-            gamesPlayed: true,
+            totalGames: true,
             gamesWon: true,
+            gamesDrawn: true,
           },
         },
         user: {
@@ -59,7 +60,16 @@ export async function GET(request: Request) {
       take: 100, // Limitar resultados
     });
 
-    return NextResponse.json(requests);
+    const normalizedRequests = requests.map((request) => ({
+      ...request,
+      team: {
+        ...request.team,
+        gamesPlayed: request.team.totalGames,
+        gamesDraw: request.team.gamesDrawn,
+      },
+    }));
+
+    return NextResponse.json(normalizedRequests);
   } catch (error) {
     console.error('Error fetching public requests:', error);
     return NextResponse.json(
