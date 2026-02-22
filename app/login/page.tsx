@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [usersCount, setUsersCount] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const fetchUsersCount = async () => {
@@ -63,97 +64,97 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 px-4">
-      <div className="max-w-md w-full">
-        {/* Logo/Header */}
-        <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-white rounded-2xl mb-4 shadow-md">
-            <Image
-              src="/images/tercer-tiempo-logo.png"
-              alt="Tercer Tiempo"
-              width={64}
-              height={64}
-              className="object-contain"
-            />
-          </div>
-          <h1 className="text-4xl font-bold text-primary mb-2">Tercer Tiempo</h1>
-          <p className="text-gray-600">Coordina partidos amistosos</p>
-        </div>
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute top-8 left-8 h-40 w-40 rounded-full bg-primary/5 blur-2xl" />
+        <div className="absolute bottom-10 right-10 h-44 w-44 rounded-full bg-accent/10 blur-2xl" />
+      </div>
 
-        {/* Formulario */}
-        <div className="card" data-registered-users={usersCount || '0'}>
-          <h2 className="text-2xl font-bold text-primary mb-6">Iniciar Sesión</h2>
+      <div className="relative mx-auto flex min-h-[calc(100vh-2rem)] w-full max-w-2xl items-center justify-center">
+        <section className="w-full rounded-3xl border border-slate-200 bg-white p-8 shadow-xl sm:p-10" data-registered-users={usersCount || '0'}>
+          <div className="mb-8 text-center">
+            <div className="mb-5 inline-flex items-center gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-6 py-4">
+              <Image
+                src="/images/tercer-tiempo-logo.png"
+                alt="Tercer Tiempo"
+                width={104}
+                height={104}
+                className="object-contain"
+              />
+              <span className="text-3xl font-bold text-primary leading-none">Tercer Tiempo</span>
+            </div>
+            <h2 className="text-3xl font-bold text-slate-900">Iniciar sesión</h2>
+            <p className="mt-2 text-sm text-slate-600">Coordina tu próximo partido</p>
+          </div>
 
           {error && (
-            <div className="bg-red-50 border-2 border-red-600 text-red-900 px-4 py-3 mb-4">
+            <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="hidden"
-              name="registeredUsersCount"
-              value={usersCount}
-              readOnly
-            />
+            <input type="hidden" name="registeredUsersCount" value={usersCount} readOnly />
 
             <div>
-              <label htmlFor="email" className="label">
+              <label htmlFor="email" className="label text-slate-700">
                 Email
               </label>
               <input
                 id="email"
                 type="email"
                 required
-                className="input"
+                autoComplete="email"
+                className="input border-slate-300 focus:border-primary"
                 placeholder="tu@email.com"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="label">
+              <label htmlFor="password" className="label text-slate-700">
                 Contraseña
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="input"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  className="input pr-20 border-slate-300 focus:border-primary"
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-3 my-auto text-xs font-semibold text-slate-600 hover:text-primary"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
+                </button>
+              </div>
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
+              className="btn-primary mt-2 w-full flex items-center justify-center gap-2"
             >
               {loading && <Spinner size="sm" />}
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              ¿No tienes cuenta?{' '}
-              <Link
-                href="/register"
-                className="text-primary font-semibold hover:underline"
-              >
-                Regístrate
-              </Link>
-            </p>
+          <div className="mt-6 text-center text-sm text-slate-600">
+            ¿No tienes cuenta?{' '}
+            <Link href="/register" className="font-semibold text-primary hover:underline">
+              Regístrate
+            </Link>
           </div>
-        </div>
+        </section>
       </div>
     </div>
   );
