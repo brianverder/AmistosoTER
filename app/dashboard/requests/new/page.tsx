@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Spinner from '@/components/Spinner';
 import Toast, { ToastType } from '@/components/Toast';
 import LoadingState from '@/components/LoadingState';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface Team {
   id: string;
@@ -40,7 +41,7 @@ export default function NewRequestPage() {
 
   const fetchTeams = async () => {
     try {
-      const response = await fetch('/api/teams');
+      const response = await fetch(withBasePath('/api/teams'));
       if (response.ok) {
         const data = await response.json();
         setTeams(data);
@@ -88,7 +89,7 @@ export default function NewRequestPage() {
         description: formData.description || undefined,
       };
 
-      const response = await fetch('/api/requests', {
+      const response = await fetch(withBasePath('/api/requests'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

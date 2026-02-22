@@ -1,5 +1,11 @@
 /** @type {import('next').NextConfig} */
+const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH?.trim() || '';
+const basePath = rawBasePath && rawBasePath !== '/'
+  ? (rawBasePath.startsWith('/') ? rawBasePath : `/${rawBasePath}`)
+  : '';
+
 const nextConfig = {
+  ...(basePath ? { basePath } : {}),
   experimental: {
     serverActions: {
       allowedOrigins: ['localhost:3000'],

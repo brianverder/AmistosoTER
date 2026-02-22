@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface Team {
   id: string;
@@ -49,8 +50,8 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
   const fetchData = async () => {
     try {
       const [requestRes, teamsRes] = await Promise.all([
-        fetch(`/api/requests/${params.id}`),
-        fetch('/api/teams'),
+        fetch(withBasePath(`/api/requests/${params.id}`)),
+        fetch(withBasePath('/api/teams')),
       ]);
 
       if (requestRes.ok) {
@@ -81,7 +82,7 @@ export default function RequestDetailPage({ params }: { params: { id: string } }
     setMatching(true);
 
     try {
-      const response = await fetch(`/api/requests/${params.id}/match`, {
+      const response = await fetch(withBasePath(`/api/requests/${params.id}/match`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

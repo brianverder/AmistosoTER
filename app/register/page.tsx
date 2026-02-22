@@ -6,6 +6,7 @@ import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import Spinner from '@/components/Spinner';
+import { withBasePath } from '@/lib/utils/base-path';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(withBasePath('/api/auth/register'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

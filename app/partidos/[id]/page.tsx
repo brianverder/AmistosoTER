@@ -8,6 +8,7 @@ import { useSession } from 'next-auth/react';
 import Spinner from '@/components/Spinner';
 import Toast, { ToastType } from '@/components/Toast';
 import LoadingState from '@/components/LoadingState';
+import { withBasePath } from '@/lib/utils/base-path';
 
 interface Team {
   id: string;
@@ -69,7 +70,7 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
 
   const fetchData = async () => {
     try {
-      const requestRes = await fetch(`/api/public/requests/${params.id}`);
+      const requestRes = await fetch(withBasePath(`/api/public/requests/${params.id}`));
 
       if (requestRes.ok) {
         const requestData = await requestRes.json();
@@ -80,7 +81,7 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
 
       // Si está autenticado, cargar sus equipos
       if (session) {
-        const teamsRes = await fetch('/api/teams');
+        const teamsRes = await fetch(withBasePath('/api/teams'));
         if (teamsRes.ok) {
           const teamsData = await teamsRes.json();
           setUserTeams(teamsData);
@@ -120,7 +121,7 @@ export default function PublicRequestDetailPage({ params }: { params: { id: stri
     setMatching(true);
 
     try {
-      const response = await fetch(`/api/requests/${params.id}/match`, {
+      const response = await fetch(withBasePath(`/api/requests/${params.id}/match`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

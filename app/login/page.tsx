@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import Spinner from '@/components/Spinner';
+import { withBasePath } from '@/lib/utils/base-path';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function LoginPage() {
   useEffect(() => {
     const fetchUsersCount = async () => {
       try {
-        const response = await fetch('/api/public/users-count', { cache: 'no-store' });
+        const response = await fetch(withBasePath('/api/public/users-count'), { cache: 'no-store' });
         if (!response.ok) return;
 
         const data = await response.json();

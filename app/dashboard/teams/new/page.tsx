@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Spinner from '@/components/Spinner';
 import Toast, { ToastType } from '@/components/Toast';
+import { withBasePath } from '@/lib/utils/base-path';
 
 export default function NewTeamPage() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function NewTeamPage() {
         payload.instagram = instagram.trim();
       }
 
-      const response = await fetch('/api/teams', {
+      const response = await fetch(withBasePath('/api/teams'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
