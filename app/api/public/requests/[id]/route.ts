@@ -39,7 +39,7 @@ export async function GET(
         },
         match: {
           include: {
-            teamA: {
+            team1: {
               select: {
                 id: true,
                 name: true,
@@ -47,7 +47,7 @@ export async function GET(
                 userId: true,
               },
             },
-            teamB: {
+            team2: {
               select: {
                 id: true,
                 name: true,
@@ -55,7 +55,7 @@ export async function GET(
                 userId: true,
               },
             },
-            userA: {
+            user1: {
               select: {
                 id: true,
                 name: true,
@@ -63,7 +63,7 @@ export async function GET(
                 phone: true,
               },
             },
-            userB: {
+            user2: {
               select: {
                 id: true,
                 name: true,
@@ -86,17 +86,17 @@ export async function GET(
     // Si hay match, solo mostrar contactos completos a los participantes
     if (matchRequest.match && isAuthenticated) {
       const isParticipant =
-        matchRequest.match.userA.id === session.user.id ||
-        matchRequest.match.userB.id === session.user.id;
+        matchRequest.match.user1.id === session.user.id ||
+        matchRequest.match.user2.id === session.user.id;
 
       if (!isParticipant) {
         // Ocultar información de contacto si no es participante
-        matchRequest.match.userA.email = '';
-        matchRequest.match.userA.phone = null;
-        matchRequest.match.userB.email = '';
-        matchRequest.match.userB.phone = null;
-        matchRequest.match.teamA.instagram = null;
-        matchRequest.match.teamB.instagram = null;
+        matchRequest.match.user1.email = '';
+        matchRequest.match.user1.phone = null;
+        matchRequest.match.user2.email = '';
+        matchRequest.match.user2.phone = null;
+        matchRequest.match.team1.instagram = null;
+        matchRequest.match.team2.instagram = null;
       }
     }
 
@@ -107,6 +107,17 @@ export async function GET(
         gamesPlayed: matchRequest.team.totalGames,
         gamesDraw: matchRequest.team.gamesDrawn,
       },
+      ...(matchRequest.match
+        ? {
+            match: {
+              ...matchRequest.match,
+              teamA: matchRequest.match.team1,
+              teamB: matchRequest.match.team2,
+              userA: matchRequest.match.user1,
+              userB: matchRequest.match.user2,
+            },
+          }
+        : {}),
     };
 
     return NextResponse.json(response);

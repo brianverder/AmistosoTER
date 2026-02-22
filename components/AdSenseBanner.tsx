@@ -42,11 +42,6 @@ function loadAdSenseScript(adClient: string): Promise<void> {
     }
 
     window.__adsenseScriptPromise__ = new Promise((resolve, reject) => {
-      if (existingScript.readyState === 'complete') {
-        resolve();
-        return;
-      }
-
       existingScript.addEventListener('load', () => resolve(), { once: true });
       existingScript.addEventListener('error', () => reject(new Error('AdSense script error')), {
         once: true,

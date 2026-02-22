@@ -74,7 +74,7 @@ export function validateData<T>(schema: z.ZodSchema<T>, data: unknown): T {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+      const messages = error.issues.map(e => `${e.path.join('.')}: ${e.message}`);
       throw new Error(`Validación fallida: ${messages.join(', ')}`);
     }
     throw error;
@@ -93,7 +93,7 @@ export function safeValidateData<T>(
   if (result.success) {
     return { success: true, data: result.data };
   } else {
-    const errors = result.error.errors.map(e => 
+    const errors = result.error.issues.map(e => 
       `${e.path.join('.')}: ${e.message}`
     );
     return { success: false, errors };

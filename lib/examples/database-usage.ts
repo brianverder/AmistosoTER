@@ -63,6 +63,9 @@ export async function updateTeamStats(
   scored: number, 
   conceded: number
 ) {
+  void scored;
+  void conceded;
+
   try {
     const team = await prisma.team.update({
       where: { id: teamId },
@@ -70,8 +73,6 @@ export async function updateTeamStats(
         gamesWon: won ? { increment: 1 } : undefined,
         gamesLost: !won ? { increment: 1 } : undefined,
         totalGames: { increment: 1 },
-        goalsFor: { increment: scored },
-        goalsAgainst: { increment: conceded },
       },
     });
     

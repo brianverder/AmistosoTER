@@ -72,7 +72,7 @@ export function getPool(): mysql.Pool {
  */
 export async function query<T = any>(
   sql: string,
-  params?: any[]
+  params: any[] = []
 ): Promise<T> {
   const connection = getPool();
   
@@ -97,7 +97,7 @@ export async function query<T = any>(
  */
 export async function queryOne<T = any>(
   sql: string,
-  params?: any[]
+  params: any[] = []
 ): Promise<T | null> {
   const results = await query<T[]>(sql, params);
   return results.length > 0 ? results[0] : null;

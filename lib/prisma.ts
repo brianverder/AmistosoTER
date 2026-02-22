@@ -4,7 +4,7 @@
  * 
  * @see https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
  */
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 // Declaración global para TypeScript
 declare global {
@@ -14,11 +14,11 @@ declare global {
 /**
  * Configuración de Prisma Client optimizada para MySQL
  */
-const prismaClientOptions = {
+const prismaClientOptions: Prisma.PrismaClientOptions = {
   // Logs solo en desarrollo
   log: process.env.NODE_ENV === 'development' 
-    ? ['query', 'error', 'warn'] as const
-    : ['error'] as const,
+    ? ['query', 'error', 'warn']
+    : ['error'],
   
   // Configuración de pool de conexiones para MySQL
   datasources: {
@@ -65,9 +65,9 @@ if (typeof window === 'undefined') {
  * ```
  */
 export async function executeTransaction<T>(
-  callback: (prisma: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => Promise<T>
+  callback: (tx: Prisma.TransactionClient) => Promise<T>
 ): Promise<T> {
-  return await prisma.$transaction(callback);
+  return prisma.$transaction((tx) => callback(tx));
 }
 
 /**

@@ -49,9 +49,9 @@ export async function GET(request: Request) {
         match: {
           select: {
             id: true,
-            teamAId: true,
-            teamBId: true,
-            matchDate: true,
+            team1Id: true,
+            team2Id: true,
+            finalDate: true,
             status: true,
           },
         },
