@@ -65,9 +65,11 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SectionHeader(
-                  title: 'SOLICITUDES',
-                  subtitle: 'Encuentra y gestiona partidos amistosos',
+                Expanded(
+                  child: SectionHeader(
+                    title: 'SOLICITUDES',
+                    subtitle: 'Encuentra y gestiona partidos amistosos',
+                  ),
                 ),
                 AppButton(
                   label: '+ NUEVA',

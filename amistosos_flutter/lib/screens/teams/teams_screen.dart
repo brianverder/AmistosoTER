@@ -36,9 +36,11 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SectionHeader(
-                  title: 'MIS EQUIPOS',
-                  subtitle: 'Gestiona tus equipos de fútbol',
+                Expanded(
+                  child: SectionHeader(
+                    title: 'MIS EQUIPOS',
+                    subtitle: 'Gestiona tus equipos de fútbol',
+                  ),
                 ),
                 AppButton(
                   label: '+ NUEVO EQUIPO',
