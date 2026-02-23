@@ -1,22 +1,29 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// ============================================================
+// PRISMA SCHEMA — MySQL
+// Amistosos TER Web
+// ============================================================
+// Docs: https://pris.ly/d/prisma-schema
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-// Modelo de Usuario
+// ============================================================
+// USUARIO
+// ============================================================
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  phone     String?
+  id        String   @id @default(cuid()) @db.VarChar(36)
+  email     String   @unique              @db.VarChar(191)
+  password  String                        @db.VarChar(255)
+  name      String                        @db.VarChar(255)
+  phone     String?                       @db.VarChar(50)
+  role      String   @default("user")     @db.VarChar(20)   // "user" | "admin"
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -24,53 +31,74 @@ model User {
   matchRequests  MatchRequest[]
   matchesAsUser1 Match[]        @relation("User1Matches")
   matchesAsUser2 Match[]        @relation("User2Matches")
+  rankings       Ranking[]
+
+  @@index([email])
+  @@map("users")
 }
 
-// Modelo de Equipo
+// ============================================================
+// EQUIPO
+// ============================================================
 model Team {
-  id        String   @id @default(cuid())
-  name      String
-  instagram String?
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid()) @db.VarChar(36)
+  name        String                        @db.VarChar(255)
+  instagram   String?                       @db.VarChar(255)
+  userId      String                        @db.VarChar(36)
+  country     String?                       @db.VarChar(50)
+  state       String?                       @db.VarChar(100)
+  footballType String?                      @db.VarChar(10)  // preferencia de modalidad
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   matchRequests        MatchRequest[]
-  matchesAsTeam1       Match[]         @relation("Team1Matches")
-  matchesAsTeam2       Match[]         @relation("Team2Matches")
-  matchResultsAsWinner MatchResult[]   @relation("WinnerTeam")
+  matchesAsTeam1       Match[]        @relation("Team1Matches")
+  matchesAsTeam2       Match[]        @relation("Team2Matches")
+  matchResultsAsWinner MatchResult[]  @relation("WinnerTeam")
+  rankings             Ranking[]
 
-  // Estadísticas
+  // Estadísticas acumuladas (cache, recalculadas desde MatchResult)
   gamesWon   Int @default(0)
   gamesLost  Int @default(0)
   gamesDrawn Int @default(0)
   totalGames Int @default(0)
+  goalsFor   Int @default(0)
+  goalsAgainst Int @default(0)
+  points     Int @default(0)          // 3=victoria, 1=empate, 0=derrota
 
   @@index([userId])
+  @@index([country])
+  @@index([footballType])
+  @@map("teams")
 }
 
-// Solicitud de Partido Amistoso
+// ============================================================
+// SOLICITUD DE PARTIDO AMISTOSO
+// ============================================================
 model MatchRequest {
-  id          String    @id @default(cuid())
-  userId      String
-  teamId      String
-  
-  footballType String?   // "11", "7", "5", "8", "otro"
-  fieldName    String?   // Nombre de la cancha
-  fieldAddress String?
-  country      String?   // País: Uruguay, Argentina, Brasil
-  state        String?   // Departamento/Provincia (opcional)
-  fieldPrice   Float?
-  matchDate    DateTime?
-  league       String?
-  
-  description  String?
-  status       String @default("active") // "active", "matched", "cancelled", "completed"
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id           String    @id @default(cuid()) @db.VarChar(36)
+  userId       String                         @db.VarChar(36)
+  teamId       String                         @db.VarChar(36)
+
+  footballType  String?   @db.VarChar(10)     // "11", "7", "5", "8", "otro"
+  fieldName     String?   @db.VarChar(255)
+  fieldAddress  String?   @db.VarChar(500)
+  fieldLocation String?   @db.VarChar(500)    // lat,lng o URL Google Maps
+  country       String?   @db.VarChar(50)     // Uruguay, Argentina, Brasil
+  state         String?   @db.VarChar(100)    // Departamento/Provincia
+  fieldPrice    Decimal?  @db.Decimal(10, 2)
+  matchDate     DateTime?
+  league        String?   @db.VarChar(255)
+  description   String?   @db.Text
+
+  status        String    @default("active")  @db.VarChar(20)
+  // "active" | "matched" | "cancelled" | "completed"
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   team  Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -79,23 +107,34 @@ model MatchRequest {
   @@index([userId])
   @@index([teamId])
   @@index([status])
+  @@index([country])
+  @@index([footballType])
+  @@index([matchDate])
+  @@map("match_requests")
 }
 
-// Match entre dos equipos
+// ============================================================
+// PARTIDO (MATCH)
+// ============================================================
 model Match {
-  id             String    @id @default(cuid())
-  matchRequestId String    @unique
-  team1Id        String
-  team2Id        String
-  userId1        String
-  userId2        String
-  
-  status         String    @default("pending") // "pending", "confirmed", "completed", "cancelled"
-  
+  id             String    @id @default(cuid()) @db.VarChar(36)
+  matchRequestId String    @unique              @db.VarChar(36)
+  team1Id        String                         @db.VarChar(36)
+  team2Id        String                         @db.VarChar(36)
+  userId1        String                         @db.VarChar(36)
+  userId2        String                         @db.VarChar(36)
+
+  status         String    @default("pending")  @db.VarChar(20)
+  // "pending" | "confirmed" | "completed" | "cancelled"
+
   finalDate      DateTime?
-  finalAddress   String?
-  finalPrice     Float?
-  
+  finalAddress   String?   @db.VarChar(500)
+  finalPrice     Decimal?  @db.Decimal(10, 2)
+  notes          String?   @db.Text
+
+  confirmedByUser1 Boolean @default(false)
+  confirmedByUser2 Boolean @default(false)
+
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -111,23 +150,67 @@ model Match {
   @@index([userId1])
   @@index([userId2])
   @@index([status])
+  @@index([finalDate])
+  @@map("matches")
 }
 
-// Resultado del Partido
+// ============================================================
+// RESULTADO DEL PARTIDO
+// ============================================================
 model MatchResult {
-  id         String   @id @default(cuid())
-  matchId    String   @unique
-  
+  id         String   @id @default(cuid()) @db.VarChar(36)
+  matchId    String   @unique              @db.VarChar(36)
+
   team1Score Int
   team2Score Int
-  winnerId   String?
-  
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  winnerId   String?                       @db.VarChar(36)   // null = empate
+
+  createdById String?                      @db.VarChar(36)   // quién cargó el resultado
+  verified    Boolean  @default(false)                       // confirmado por ambos
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
   winner Team? @relation("WinnerTeam", fields: [winnerId], references: [id], onDelete: SetNull)
 
   @@index([matchId])
   @@index([winnerId])
+  @@map("match_results")
+}
+
+// ============================================================
+// RANKING
+// ============================================================
+model Ranking {
+  id           String   @id @default(cuid()) @db.VarChar(36)
+  teamId       String                        @db.VarChar(36)
+  userId       String                        @db.VarChar(36)
+
+  season       String   @db.VarChar(20)      // Ej: "2025", "2025-S1"
+  footballType String?  @db.VarChar(10)      // "11", "7", "5", "8" o null = todos
+  country      String?  @db.VarChar(50)
+
+  position     Int      @default(0)
+  points       Int      @default(0)          // 3V 1E 0D
+  gamesPlayed  Int      @default(0)
+  gamesWon     Int      @default(0)
+  gamesLost    Int      @default(0)
+  gamesDrawn   Int      @default(0)
+  goalsFor     Int      @default(0)
+  goalsAgainst Int      @default(0)
+  goalDiff     Int      @default(0)          // goalsFor - goalsAgainst
+
+  updatedAt    DateTime @updatedAt
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, season, footballType, country])
+  @@index([teamId])
+  @@index([userId])
+  @@index([season])
+  @@index([points])
+  @@index([country, footballType])
+  @@map("rankings")
 }

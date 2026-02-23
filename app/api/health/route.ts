@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 /**
  * HEALTH CHECK ENDPOINT
  * Verificar estado de la conexión a MySQL

@@ -12,3 +12,4 @@ export { TeamsRepository } from './teams.repository';
 export { MatchRequestsRepository } from './requests.repository';
 export { MatchesRepository } from './matches.repository';
 export { MatchResultsRepository } from './results.repository';
+export { RankingRepository } from './ranking.repository';
