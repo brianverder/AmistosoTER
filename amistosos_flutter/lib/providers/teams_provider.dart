@@ -16,6 +16,11 @@ final teamsServiceProvider = Provider<TeamsService>((ref) {
 class TeamsNotifier extends AsyncNotifier<List<TeamModel>> {
   @override
   Future<List<TeamModel>> build() async {
+    // Watch auth so this provider rebuilds when the session is established.
+    // Without this, build() could run during AuthLoading, get a 401, and
+    // never retry once the session is ready.
+    final authState = ref.watch(authNotifierProvider);
+    if (authState is! AuthAuthenticated) return [];
     return await ref.read(teamsServiceProvider).getMyTeams();
   }
 
@@ -37,7 +42,7 @@ class TeamsNotifier extends AsyncNotifier<List<TeamModel>> {
           );
       state = AsyncData([...(state.valueOrNull ?? []), team]);
       return team;
-    } on ApiException catch (e) {
+    } on ApiException {
       rethrow;
     }
   }

@@ -6,11 +6,26 @@ import '../../core/constants.dart';
 import '../../providers/teams_provider.dart';
 import '../../widgets/app_widgets.dart';
 
-class TeamsScreen extends ConsumerWidget {
+class TeamsScreen extends ConsumerStatefulWidget {
   const TeamsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TeamsScreen> createState() => _TeamsScreenState();
+}
+
+class _TeamsScreenState extends ConsumerState<TeamsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Refresh the teams list every time the screen is opened so we always
+    // show up-to-date data (handles back-navigation, stale cache, etc.).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(teamsNotifierProvider.notifier).refresh();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final teamsAsync = ref.watch(teamsNotifierProvider);
 
     return Padding(
@@ -102,7 +117,6 @@ class TeamsScreen extends ConsumerWidget {
                                           ),
                                           onDelete: () => _confirmDelete(
                                             context,
-                                            ref,
                                             team.id,
                                             team.name,
                                           ),
@@ -174,7 +188,6 @@ class TeamsScreen extends ConsumerWidget {
 
   Future<void> _confirmDelete(
     BuildContext context,
-    WidgetRef ref,
     String teamId,
     String teamName,
   ) async {

@@ -16,6 +16,9 @@ final matchesServiceProvider = Provider<MatchesService>((ref) {
 class MatchesNotifier extends AsyncNotifier<List<MatchModel>> {
   @override
   Future<List<MatchModel>> build() async {
+    // Watch auth so this provider rebuilds when the session is established.
+    final authState = ref.watch(authNotifierProvider);
+    if (authState is! AuthAuthenticated) return [];
     return ref.read(matchesServiceProvider).getMyMatches();
   }
 
