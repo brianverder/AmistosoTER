@@ -2,6 +2,17 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "MySQL: Iniciar",
+      "type": "shell",
+      "command": "$p = Get-NetTCPConnection -LocalPort 3306 -ErrorAction SilentlyContinue; if($p){ Write-Host 'MySQL ya corriendo' } else { Start-Process -FilePath 'C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqld.exe' -ArgumentList '--datadir=C:\\mysql-data','--port=3306' -WindowStyle Hidden; Start-Sleep -Seconds 4; Write-Host 'MySQL iniciado' }",
+      "isBackground": false,
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      },
+      "problemMatcher": []
+    },
+    {
       "label": "Backend: Next.js",
       "type": "shell",
       "command": "npm run dev",
@@ -33,7 +44,7 @@
     {
       "label": "Flutter: Hot Reload (web)",
       "type": "shell",
-      "command": "flutter run -d web-server --web-port=4444 --web-hostname=localhost --dart-define=API_BASE_URL=http://localhost:3000",
+      "command": "flutter run -d web-server --web-port=5050 --web-hostname=localhost --dart-define=API_BASE_URL=http://localhost:3000",
       "options": {
         "cwd": "${workspaceFolder}/amistosos_flutter",
         "env": {
@@ -64,8 +75,8 @@
     },
     {
       "label": "🚀 Iniciar todo",
-      "dependsOn": ["Backend: Next.js", "Flutter: Hot Reload (web)"],
-      "dependsOrder": "parallel",
+      "dependsOn": ["MySQL: Iniciar", "Backend: Next.js", "Flutter: Hot Reload (web)"],
+      "dependsOrder": "sequence",
       "group": {
         "kind": "build",
         "isDefault": true
