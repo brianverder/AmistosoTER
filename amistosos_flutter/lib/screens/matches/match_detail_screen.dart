@@ -91,7 +91,9 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                           onPressed: () => context.go(AppRoutes.matches),
                         ),
                         const SizedBox(width: 8),
-                        const SectionHeader(title: 'DETALLE DEL PARTIDO'),
+                        const Expanded(
+                          child: SectionHeader(title: 'DETALLE DEL PARTIDO'),
+                        ),
                       ],
                     ),
                     const SizedBox(height: AppConstants.spacingLg),

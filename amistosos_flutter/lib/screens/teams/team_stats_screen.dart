@@ -30,12 +30,14 @@ class TeamStatsScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    teamAsync.when(
-                      loading: () => const Text('Estadísticas'),
-                      error: (_, __) => const Text('Estadísticas'),
-                      data: (team) => SectionHeader(
-                        title: 'ESTADÍSTICAS',
-                        subtitle: team?.name,
+                    Expanded(
+                      child: teamAsync.when(
+                        loading: () => const Text('Estadísticas'),
+                        error: (_, __) => const Text('Estadísticas'),
+                        data: (team) => SectionHeader(
+                          title: 'ESTADÍSTICAS',
+                          subtitle: team?.name,
+                        ),
                       ),
                     ),
                   ],

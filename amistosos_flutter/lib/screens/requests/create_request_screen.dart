@@ -141,7 +141,9 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                         onPressed: () => context.go(AppRoutes.requests),
                       ),
                       const SizedBox(width: 8),
-                      const SectionHeader(title: 'NUEVA SOLICITUD'),
+                      const Expanded(
+                        child: SectionHeader(title: 'NUEVA SOLICITUD'),
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppConstants.spacingLg),

@@ -668,7 +668,7 @@ class SectionHeader extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Expanded(
+            Flexible(
               child: Text(
                 title,
                 style: Theme.of(context).textTheme.headlineMedium,
