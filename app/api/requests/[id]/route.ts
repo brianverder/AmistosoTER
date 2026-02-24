@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+function serializeRequest(r: any) {
+  if (!r) return r;
+  return { ...r, fieldPrice: r.fieldPrice != null ? Number(r.fieldPrice) : null };
+}
+
 // GET - Obtener una solicitud específica
 export async function GET(
   request: Request,
@@ -38,7 +43,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(matchRequest);
+    return NextResponse.json(serializeRequest(matchRequest));
   } catch (error) {
     console.error('Error obteniendo solicitud:', error);
     return NextResponse.json(

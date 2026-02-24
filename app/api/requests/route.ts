@@ -6,6 +6,18 @@ import { authOptions } from '@/lib/auth';
 import { MatchRequestsService } from '@/lib/services-server';
 import { handleApiError } from '@/lib/errors';
 
+// Prisma devuelve DECIMAL como string — lo normalizamos a number
+function serializeRequest(r: any) {
+  if (!r) return r;
+  return {
+    ...r,
+    fieldPrice: r.fieldPrice != null ? Number(r.fieldPrice) : null,
+  };
+}
+function serializeRequests(list: any[]) {
+  return list.map(serializeRequest);
+}
+
 // GET - Obtener todas las solicitudes (del usuario o disponibles)
 export async function GET(request: Request) {
   try {
@@ -38,16 +50,17 @@ export async function GET(request: Request) {
           country,
         }
       );
-      result = matchRequests;
+      result = serializeRequests(matchRequests);
     } else {
       // Solicitudes disponibles
-      result = await MatchRequestsService.getAvailableRequests({
+      const available = await MatchRequestsService.getAvailableRequests({
         excludeUserId: session.user.id,
         footballType,
         country,
         page,
         pageSize
       });
+      result = { requests: serializeRequests(available.requests), pagination: available.pagination };
     }
 
     return NextResponse.json(result);
@@ -94,7 +107,7 @@ export async function POST(request: Request) {
       description: data.description,
     });
 
-    return NextResponse.json(matchRequest, { status: 201 });
+    return NextResponse.json(serializeRequest(matchRequest), { status: 201 });
   } catch (error) {
     console.error('Error creando solicitud:', error);
     const apiError = handleApiError(error);

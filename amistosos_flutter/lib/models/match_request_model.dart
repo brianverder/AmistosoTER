@@ -119,7 +119,9 @@ class MatchRequestModel extends Equatable {
       fieldAddress: json['fieldAddress'] as String?,
       country: json['country'] as String?,
       state: json['state'] as String?,
-      fieldPrice: (json['fieldPrice'] as num?)?.toDouble(),
+      fieldPrice: json['fieldPrice'] != null
+          ? double.tryParse(json['fieldPrice'].toString())
+          : null,
       matchDate: json['matchDate'] != null
           ? DateTime.tryParse(json['matchDate'].toString())
           : null,

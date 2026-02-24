@@ -222,19 +222,19 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     hintText: 'Ej: Montevideo',
                   ),
                   const SizedBox(height: AppConstants.spacingMd),
-                  _FieldLabel('NOMBRE DEL CAMPO'),
+                  _FieldLabel('NOMBRE DE LA CANCHA'),
                   AppTextField(
                     controller: _fieldNameCtrl,
                     hintText: 'Ej: Complejo Olimpia',
                   ),
                   const SizedBox(height: AppConstants.spacingMd),
-                  _FieldLabel('DIRECCIÓN DEL CAMPO'),
+                  _FieldLabel('DIRECCIÓN DE LA CANCHA'),
                   AppTextField(
                     controller: _fieldAddressCtrl,
                     hintText: 'Ej: Av. 18 de Julio 1234',
                   ),
                   const SizedBox(height: AppConstants.spacingMd),
-                  _FieldLabel('PRECIO DEL CAMPO'),
+                  _FieldLabel('PRECIO DE LA CANCHA'),
                   AppTextField(
                     controller: _fieldPriceCtrl,
                     hintText: 'Ej: \$1200 (pesos)',
