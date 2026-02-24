@@ -102,11 +102,12 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final picked = await showDatePicker(
       context: context,
-      initialDate: _matchDate ?? now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
+      initialDate: _matchDate != null && !_matchDate!.isBefore(today) ? _matchDate! : today,
+      firstDate: today,
+      lastDate: today.add(const Duration(days: 365)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           dialogBackgroundColor: Colors.white,
