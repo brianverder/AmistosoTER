@@ -87,8 +87,18 @@ export async function POST(
           finalPrice: matchRequest.fieldPrice,
         },
         include: {
-          team1: true,
-          team2: true,
+          team1: {
+            select: { id: true, name: true, instagram: true },
+          },
+          team2: {
+            select: { id: true, name: true, instagram: true },
+          },
+          user1: {
+            select: { id: true, name: true, phone: true },
+          },
+          user2: {
+            select: { id: true, name: true, phone: true },
+          },
           matchRequest: true,
         },
       });

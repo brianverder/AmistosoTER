@@ -53,18 +53,39 @@ class MatchUserPreview extends Equatable {
 class TeamPreview extends Equatable {
   final String id;
   final String name;
+  final String? instagram;
+  final int? gamesWon;
+  final int? gamesLost;
+  final int? gamesDrawn;
+  final int? totalGames;
 
-  const TeamPreview({required this.id, required this.name});
+  const TeamPreview({
+    required this.id,
+    required this.name,
+    this.instagram,
+    this.gamesWon,
+    this.gamesLost,
+    this.gamesDrawn,
+    this.totalGames,
+  });
 
   factory TeamPreview.fromJson(Map<String, dynamic> json) {
     return TeamPreview(
       id: json['id'] as String,
       name: json['name'] as String,
+      instagram: json['instagram'] as String?,
+      gamesWon: (json['gamesWon'] as num?)?.toInt(),
+      gamesLost: (json['gamesLost'] as num?)?.toInt(),
+      gamesDrawn: (json['gamesDrawn'] as num?)?.toInt() ??
+          (json['gamesDraw'] as num?)?.toInt(),
+      totalGames: (json['totalGames'] as num?)?.toInt() ??
+          (json['gamesPlayed'] as num?)?.toInt(),
     );
   }
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props =>
+      [id, name, instagram, gamesWon, gamesLost, gamesDrawn, totalGames];
 }
 
 class MatchRequestModel extends Equatable {
