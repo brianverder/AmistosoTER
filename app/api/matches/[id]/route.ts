@@ -3,6 +3,21 @@ import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
+// Decimal/BigInt → plain number para serialización JSON
+function serializeMatchDetail(m: any) {
+  if (!m) return m;
+  return {
+    ...m,
+    finalPrice: m.finalPrice != null ? Number(m.finalPrice) : null,
+    matchRequest: m.matchRequest
+      ? {
+          ...m.matchRequest,
+          fieldPrice: m.matchRequest.fieldPrice != null ? Number(m.matchRequest.fieldPrice) : null,
+        }
+      : null,
+  };
+}
+
 // GET - Obtener un match específico
 export async function GET(
   request: Request,
@@ -64,7 +79,7 @@ export async function GET(
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     }
 
-    return NextResponse.json(match);
+    return NextResponse.json(serializeMatchDetail(match));
   } catch (error) {
     console.error('Error obteniendo match:', error);
     return NextResponse.json(

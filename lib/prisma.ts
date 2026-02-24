@@ -91,9 +91,9 @@ export async function getDatabaseStats() {
   try {
     const stats = await prisma.$queryRaw<Array<{
       table_name: string;
-      table_rows: number;
-      data_length: number;
-      index_length: number;
+      table_rows: bigint | number;
+      data_length: bigint | number;
+      index_length: bigint | number;
     }>>`
       SELECT 
         table_name,
@@ -104,8 +104,14 @@ export async function getDatabaseStats() {
       WHERE table_schema = DATABASE()
       ORDER BY data_length DESC
     `;
-    
-    return stats;
+
+    // MySQL devuelve BigInt para columnas BIGINT — convertir a Number para JSON
+    return stats.map((row) => ({
+      table_name: row.table_name,
+      table_rows: Number(row.table_rows),
+      data_length: Number(row.data_length),
+      index_length: Number(row.index_length),
+    }));
   } catch (error) {
     console.error('Error obteniendo estadísticas:', error);
     return [];

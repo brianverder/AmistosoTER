@@ -6,6 +6,21 @@ import { authOptions } from '@/lib/auth';
 import { MatchesService } from '@/lib/services-server';
 import { handleApiError } from '@/lib/errors';
 
+// Prisma devuelve DECIMAL como objeto — lo normalizamos a number para el cliente Flutter
+function serializeMatch(m: any) {
+  if (!m) return m;
+  return {
+    ...m,
+    finalPrice: m.finalPrice != null ? Number(m.finalPrice) : null,
+    matchRequest: m.matchRequest
+      ? {
+          ...m.matchRequest,
+          fieldPrice: m.matchRequest.fieldPrice != null ? Number(m.matchRequest.fieldPrice) : null,
+        }
+      : null,
+  };
+}
+
 // GET - Obtener todos los matches del usuario
 export async function GET(request: Request) {
   try {
@@ -23,7 +38,7 @@ export async function GET(request: Request) {
       status
     );
 
-    return NextResponse.json(matches);
+    return NextResponse.json(matches.map(serializeMatch));
   } catch (error) {
     console.error('Error obteniendo matches:', error);
     const apiError = handleApiError(error);
