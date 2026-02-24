@@ -369,7 +369,7 @@ class AppTheme {
       ),
 
       // Tab
-      tabBarTheme: TabBarTheme(
+      tabBarTheme: TabBarThemeData(
         indicatorColor: primary,
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: border,
