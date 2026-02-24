@@ -111,13 +111,24 @@ class _TopBar extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: AppTheme.primary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.sports_soccer_rounded, color: Colors.white, size: 18),
+            child: Padding(
+              padding: const EdgeInsets.all(6),
+              child: Image.asset(
+                'assets/images/logo.png',
+                width: 24,
+                height: 24,
+                color: Colors.white,
+                colorBlendMode: BlendMode.srcIn,
+                errorBuilder: (_, __, ___) =>
+                    const Icon(Icons.sports_soccer_rounded, color: Colors.white, size: 18),
+              ),
+            ),
           ),
           const SizedBox(width: 10),
           const Text(
