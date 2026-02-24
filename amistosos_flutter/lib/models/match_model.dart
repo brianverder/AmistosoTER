@@ -52,18 +52,46 @@ class MatchResultModel extends Equatable {
 class TeamSnapshot extends Equatable {
   final String id;
   final String name;
+  final String? instagram;
 
-  const TeamSnapshot({required this.id, required this.name});
+  const TeamSnapshot({required this.id, required this.name, this.instagram});
 
   factory TeamSnapshot.fromJson(Map<String, dynamic> json) {
     return TeamSnapshot(
       id: json['id'] as String,
       name: json['name'] as String,
+      instagram: json['instagram'] as String?,
     );
   }
 
   @override
-  List<Object?> get props => [id, name];
+  List<Object?> get props => [id, name, instagram];
+}
+
+class UserSnapshot extends Equatable {
+  final String id;
+  final String name;
+  final String? email;
+  final String? phone;
+
+  const UserSnapshot({
+    required this.id,
+    required this.name,
+    this.email,
+    this.phone,
+  });
+
+  factory UserSnapshot.fromJson(Map<String, dynamic> json) {
+    return UserSnapshot(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      email: json['email'] as String?,
+      phone: json['phone'] as String?,
+    );
+  }
+
+  @override
+  List<Object?> get props => [id, name, email, phone];
 }
 
 class MatchRequestSnapshot extends Equatable {
@@ -103,6 +131,8 @@ class MatchModel extends Equatable {
   final DateTime? updatedAt;
   final TeamSnapshot? team1;
   final TeamSnapshot? team2;
+  final UserSnapshot? user1;
+  final UserSnapshot? user2;
   final MatchResultModel? matchResult;
   final MatchRequestSnapshot? matchRequest;
 
@@ -118,6 +148,8 @@ class MatchModel extends Equatable {
     this.updatedAt,
     this.team1,
     this.team2,
+    this.user1,
+    this.user2,
     this.matchResult,
     this.matchRequest,
   });
@@ -142,6 +174,12 @@ class MatchModel extends Equatable {
           : null,
       team2: json['team2'] != null
           ? TeamSnapshot.fromJson(json['team2'] as Map<String, dynamic>)
+          : null,
+      user1: json['user1'] != null
+          ? UserSnapshot.fromJson(json['user1'] as Map<String, dynamic>)
+          : null,
+      user2: json['user2'] != null
+          ? UserSnapshot.fromJson(json['user2'] as Map<String, dynamic>)
           : null,
       matchResult: json['matchResult'] != null
           ? MatchResultModel.fromJson(
@@ -171,6 +209,8 @@ class MatchModel extends Equatable {
         updatedAt,
         team1,
         team2,
+        user1,
+        user2,
         matchResult,
         matchRequest,
       ];

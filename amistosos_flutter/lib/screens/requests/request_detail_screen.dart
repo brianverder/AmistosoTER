@@ -507,6 +507,7 @@ class _MatchActionState extends ConsumerState<_MatchAction> {
         barrierDismissible: true,
         builder: (_) => _ContactInfoModal(
           rivalName: user1?['name'] as String? ?? 'Rival',
+          rivalEmail: user1?['email'] as String?,
           rivalPhone: user1?['phone'] as String?,
           rivalTeamName: team1?['name'] as String? ?? 'Equipo rival',
           rivalInstagram: team1?['instagram'] as String?,
@@ -539,12 +540,14 @@ class _DeleteAction extends StatelessWidget {
 
 class _ContactInfoModal extends StatelessWidget {
   final String rivalName;
+  final String? rivalEmail;
   final String? rivalPhone;
   final String rivalTeamName;
   final String? rivalInstagram;
 
   const _ContactInfoModal({
     required this.rivalName,
+    this.rivalEmail,
     this.rivalPhone,
     required this.rivalTeamName,
     this.rivalInstagram,
@@ -684,6 +687,26 @@ class _ContactInfoModal extends StatelessWidget {
                     iconColor: AppTheme.info,
                     onCopy: () => _copy(context, rivalName, 'Nombre'),
                   ),
+
+                  if (rivalEmail != null) ...[
+                    const SizedBox(height: 8),
+                    _ContactRow(
+                      icon: Icons.email_rounded,
+                      label: 'EMAIL',
+                      value: rivalEmail!,
+                      iconColor: AppTheme.info,
+                      onCopy: () => _copy(context, rivalEmail!, 'Email'),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    _ContactRow(
+                      icon: Icons.email_rounded,
+                      label: 'EMAIL',
+                      value: 'No registrado',
+                      iconColor: AppTheme.textMuted,
+                      muted: true,
+                    ),
+                  ],
 
                   if (rivalPhone != null) ...[
                     const SizedBox(height: 8),

@@ -652,15 +652,17 @@ class _AppButtonState extends State<AppButton> {
         ),
       );
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (widget.icon != null) ...[
-          Icon(widget.icon, size: 15),
-          const SizedBox(width: 6),
+    return Center(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (widget.icon != null) ...[
+            Icon(widget.icon, size: 15),
+            const SizedBox(width: 6),
+          ],
+          Text(widget.label),
         ],
-        Text(widget.label),
-      ],
+      ),
     );
   }
 
@@ -733,7 +735,7 @@ class _AppButtonState extends State<AppButton> {
               child: DefaultTextStyle(
                 style: TextStyle(
                   color: _disabled ? AppTheme.textMuted : AppTheme.surface,
-                  fontSize: 13,
+                  fontSize: 15,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.1,
                 ),

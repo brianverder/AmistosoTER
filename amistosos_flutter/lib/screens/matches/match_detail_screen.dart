@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants.dart';
+import '../../core/theme.dart';
+import '../../models/match_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/matches_provider.dart';
 import '../../widgets/app_widgets.dart';
 
@@ -56,6 +60,7 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final matchAsync = ref.watch(matchDetailProvider(widget.matchId));
+    final currentUser = ref.watch(currentUserProvider);
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -230,6 +235,12 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                           ],
                         ),
                       ),
+                    ),
+                    const SizedBox(height: AppConstants.spacingMd),
+                    // Contact info of the rival
+                    _RivalContactCard(
+                      match: match,
+                      currentUserId: currentUser?.id ?? '',
                     ),
                     const SizedBox(height: AppConstants.spacingMd),
                     // Result section
@@ -468,6 +479,250 @@ class _InfoRow extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Rival contact card ───────────────────────────────────────────────────────
+
+class _RivalContactCard extends StatelessWidget {
+  final MatchModel match;
+  final String currentUserId;
+
+  const _RivalContactCard({
+    required this.match,
+    required this.currentUserId,
+  });
+
+  void _copy(BuildContext context, String value, String label) {
+    Clipboard.setData(ClipboardData(text: value));
+    showAppToast(context, '$label copiado');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Determine rival based on current user
+    final isUser1 = currentUserId == match.userId1;
+    final UserSnapshot? rivalUser = isUser1 ? match.user2 : match.user1;
+    final TeamSnapshot? rivalTeam = isUser1 ? match.team2 : match.team1;
+
+    return AppCard(
+      child: Padding(
+        padding: const EdgeInsets.all(AppConstants.spacingMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'DATOS DE CONTACTO DEL RIVAL',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+                color: AppTheme.textMuted,
+                letterSpacing: 0.8,
+              ),
+            ),
+            const SizedBox(height: 14),
+
+            // Team row
+            if (rivalTeam != null) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                ),
+                child: Row(
+                  children: [
+                    AppAvatar(name: rivalTeam.name, size: 42),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'EQUIPO RIVAL',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textMuted,
+                              letterSpacing: 0.6,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            rivalTeam.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.text,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+
+            // Contact rows
+            if (rivalUser != null) ...[
+              _ContactDetailRow(
+                icon: Icons.person_rounded,
+                label: 'NOMBRE',
+                value: rivalUser.name,
+                iconColor: AppTheme.info,
+                onCopy: () => _copy(context, rivalUser.name, 'Nombre'),
+              ),
+              const SizedBox(height: 8),
+              if (rivalUser.email != null) ...[
+                _ContactDetailRow(
+                  icon: Icons.email_rounded,
+                  label: 'EMAIL',
+                  value: rivalUser.email!,
+                  iconColor: AppTheme.info,
+                  onCopy: () => _copy(context, rivalUser.email!, 'Email'),
+                ),
+              ] else
+                _ContactDetailRow(
+                  icon: Icons.email_rounded,
+                  label: 'EMAIL',
+                  value: 'No registrado',
+                  iconColor: AppTheme.textMuted,
+                  muted: true,
+                ),
+              const SizedBox(height: 8),
+              if (rivalUser.phone != null) ...[
+                _ContactDetailRow(
+                  icon: Icons.phone_rounded,
+                  label: 'TELÉFONO',
+                  value: rivalUser.phone!,
+                  iconColor: AppTheme.success,
+                  onCopy: () => _copy(context, rivalUser.phone!, 'Teléfono'),
+                ),
+              ] else
+                _ContactDetailRow(
+                  icon: Icons.phone_rounded,
+                  label: 'TELÉFONO',
+                  value: 'No registrado',
+                  iconColor: AppTheme.textMuted,
+                  muted: true,
+                ),
+              if (rivalTeam?.instagram != null) ...[
+                const SizedBox(height: 8),
+                _ContactDetailRow(
+                  icon: Icons.camera_alt_rounded,
+                  label: 'INSTAGRAM',
+                  value: rivalTeam!.instagram!.startsWith('@')
+                      ? rivalTeam.instagram!
+                      : '@${rivalTeam.instagram!}',
+                  iconColor: const Color(0xFFE1306C),
+                  onCopy: () => _copy(
+                    context,
+                    rivalTeam.instagram!.startsWith('@')
+                        ? rivalTeam.instagram!
+                        : '@${rivalTeam.instagram!}',
+                    'Instagram',
+                  ),
+                ),
+              ],
+            ] else ...[
+              const Center(
+                child: Text(
+                  'Información de contacto no disponible',
+                  style: TextStyle(color: AppTheme.textMuted, fontSize: 13),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactDetailRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color iconColor;
+  final VoidCallback? onCopy;
+  final bool muted;
+
+  const _ContactDetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.iconColor,
+    this.onCopy,
+    this.muted = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: muted
+                  ? AppTheme.surfaceVariant
+                  : iconColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            ),
+            child: Icon(
+              icon,
+              size: 16,
+              color: muted ? AppTheme.textMuted : iconColor,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textMuted,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: muted ? AppTheme.textMuted : AppTheme.text,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onCopy != null)
+            IconButton(
+              onPressed: onCopy,
+              icon: const Icon(Icons.copy_rounded, size: 16),
+              color: AppTheme.textMuted,
+              tooltip: 'Copiar',
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            ),
         ],
       ),
     );
