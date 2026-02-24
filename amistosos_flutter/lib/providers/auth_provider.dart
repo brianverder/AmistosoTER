@@ -63,8 +63,8 @@ extension AuthStateX on AuthState {
 class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
-    _restoreSession();
-    return const AuthLoading();
+    // No restaurar sesión al arranque: siempre ir a login.
+    return const AuthUnauthenticated();
   }
 
   AuthService get _service => ref.read(authServiceProvider);
