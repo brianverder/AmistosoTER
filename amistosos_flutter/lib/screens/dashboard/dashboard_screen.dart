@@ -10,290 +10,233 @@ import '../../providers/requests_provider.dart';
 import '../../providers/teams_provider.dart';
 import '../../widgets/app_widgets.dart';
 
-/// Pantalla principal del dashboard — equivalente a app/dashboard/page.tsx
+/// Pantalla principal del dashboard
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
-    final teamsAsync = ref.watch(teamsNotifierProvider);
-    final requestsAsync = ref.watch(requestsProvider(const RequestFilters(tab: 'available')));
-    final matchesAsync = ref.watch(matchesNotifierProvider);
-    final isWide = MediaQuery.sizeOf(context).width >= 768;
+    final user    = ref.watch(currentUserProvider);
+    final isWide  = MediaQuery.sizeOf(context).width >= 768;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        // ── Hero / Bienvenida ────────────────────────────────────────────
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFFDCFCE7), Color(0xFFF0FDF4), Color(0xFFECFDF5)],
-            ),
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            border: Border.all(color: AppTheme.primaryLight, width: 1),
+          // ── Header ──────────────────────────────────────────────────────
+          _DashboardHeader(
+            userName: user?.name,
+            onNewRequest: () => context.go('/dashboard/requests/new'),
           ),
-          child: Stack(
-            children: [
-              Column(
+          const SizedBox(height: 28),
+
+          // ── Métricas ─────────────────────────────────────────────────────
+          _StatsSection(isWide: isWide),
+          const SizedBox(height: 28),
+
+          // ── Acciones rápidas ─────────────────────────────────────────────
+          _QuickActionsSection(isWide: isWide),
+          const SizedBox(height: 32),
+
+          // ── Contenido (solicitudes + matches) ────────────────────────────
+          if (isWide)
+            IntrinsicHeight(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Text('👋', style: TextStyle(fontSize: 40)),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '¡Hola, ${user?.name ?? 'Jugador'}!',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .displaySmall
-                                  ?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                            Text(
-                              'Listo para coordinar tu próximo partido',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                children: const [
+                  Expanded(child: _RecentRequestsSection()),
+                  SizedBox(width: 20),
+                  Expanded(child: _ActiveMatchesSection()),
                 ],
               ),
-              Positioned(
-                right: 0,
-                top: -10,
-                child: Text(
-                  '⚽',
-                  style: TextStyle(
-                    fontSize: 100,
-                    color: AppTheme.primary.withOpacity(0.08),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // ── Estadísticas principales ─────────────────────────────────────
-        teamsAsync.when(
-          loading: () => GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: isWide ? 3 : 1,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 2.5,
-            children: List.generate(
-                3,
-                (_) => Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceVariant,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                    )),
-          ),
-          error: (_, __) => const SizedBox(),
-          data: (teams) {
-            final teamsCount = teams.length;
-            return teamsAsync.when(
-              data: (_) => requestsAsync.when(
-                data: (requests) => matchesAsync.when(
-                  data: (matches) => _StatsGrid(
-                    isWide: isWide,
-                    teamCount: teamsCount,
-                    requestCount: requests.length,
-                    matchCount: matches.length,
-                  ),
-                  loading: () => _StatsGrid(
-                      isWide: isWide,
-                      teamCount: teamsCount,
-                      requestCount: 0,
-                      matchCount: 0),
-                  error: (_, __) => _StatsGrid(
-                      isWide: isWide,
-                      teamCount: teamsCount,
-                      requestCount: 0,
-                      matchCount: 0),
-                ),
-                loading: () => _StatsGrid(
-                    isWide: isWide,
-                    teamCount: teamsCount,
-                    requestCount: 0,
-                    matchCount: 0),
-                error: (_, __) => _StatsGrid(
-                    isWide: isWide,
-                    teamCount: teamsCount,
-                    requestCount: 0,
-                    matchCount: 0),
-              ),
-              loading: () => const AppSpinner(),
-              error: (_, __) => const SizedBox(),
-            );
-          },
-        ),
-        const SizedBox(height: 32),
-
-        // ── Acciones rápidas ─────────────────────────────────────────────
-        const SectionHeader(title: '⚡ Acciones Rápidas'),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            _QuickActionCard(
-              icon: '➕',
-              title: 'Crear Equipo',
-              subtitle: 'Registra tu equipo',
-              onTap: () => context.go('/dashboard/teams/new'),
-            ),
-            _QuickActionCard(
-              icon: '📋',
-              title: 'Nueva Solicitud',
-              subtitle: 'Busca rivales',
-              onTap: () => context.go('/dashboard/requests/new'),
-            ),
-            _QuickActionCard(
-              icon: '🔍',
-              title: 'Ver Solicitudes',
-              subtitle: 'Solicitudes disponibles',
-              onTap: () => context.go('/dashboard/requests'),
-            ),
+            )
+          else ...[
+            const _RecentRequestsSection(),
+            const SizedBox(height: 20),
+            const _ActiveMatchesSection(),
           ],
-        ),
-        const SizedBox(height: 32),
+          const SizedBox(height: 32),
 
-        // ── Layout de dos columnas en desktop ────────────────────────────
-        if (isWide)
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: _RecentRequestsSection(ref: ref)),
-                const SizedBox(width: 24),
-                Expanded(child: _ActiveMatchesSection(ref: ref)),
-              ],
-            ),
-          )
-        else ...[
-          _RecentRequestsSection(ref: ref),
-          const SizedBox(height: 24),
-          _ActiveMatchesSection(ref: ref),
+          // ── Ranking de equipos ───────────────────────────────────────────
+          const _TopTeamsSection(),
+          const SizedBox(height: 32),
         ],
-
-        const SizedBox(height: 32),
-
-        // ── Top equipos (ranking global) ─────────────────────────────────
-        _TopTeamsSection(ref: ref),
-      ],
       ),
     );
   }
 }
 
-// ── Stats grid ─────────────────────────────────────────────────────────────
+// ─── Header ───────────────────────────────────────────────────────────────────
 
-class _StatsGrid extends StatelessWidget {
-  final bool isWide;
-  final int teamCount;
-  final int requestCount;
-  final int matchCount;
+class _DashboardHeader extends StatelessWidget {
+  final String? userName;
+  final VoidCallback onNewRequest;
 
-  const _StatsGrid({
-    required this.isWide,
-    required this.teamCount,
-    required this.requestCount,
-    required this.matchCount,
+  const _DashboardHeader({
+    required this.userName,
+    required this.onNewRequest,
   });
+
+  static const _dias   = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  static const _meses  = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+
+  String get _greeting {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Buenos días';
+    if (h < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  String get _date {
+    final n = DateTime.now();
+    return '${_dias[n.weekday - 1]}, ${n.day} de ${_meses[n.month - 1]}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Builder(builder: (ctx) {
-      final stats = [
-        (label: 'Equipos', value: teamCount, emoji: '⚽', route: '/dashboard/teams'),
-        (label: 'Solicitudes', value: requestCount, emoji: '📋', route: '/dashboard/requests'),
-        (label: 'Partidos', value: matchCount, emoji: '🏆', route: '/dashboard/matches'),
-      ];
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '$_greeting, ${userName ?? 'Jugador'}',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                _date,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: AppTheme.textMuted),
+              ),
+            ],
+          ),
+        ),
+        AppButton(
+          label: 'Nueva Solicitud',
+          icon: Icons.add_rounded,
+          onPressed: onNewRequest,
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+class _StatsSection extends ConsumerWidget {
+  final bool isWide;
+  const _StatsSection({required this.isWide});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final teamsAsync    = ref.watch(teamsNotifierProvider);
+    final requestsAsync = ref.watch(requestsProvider(const RequestFilters(tab: 'available')));
+    final matchesAsync  = ref.watch(matchesNotifierProvider);
+
+    final teamsCount    = teamsAsync.valueOrNull?.length    ?? 0;
+    final requestsCount = requestsAsync.valueOrNull?.length ?? 0;
+    final matchesCount  = matchesAsync.valueOrNull?.length  ?? 0;
+
+    // Esqueletos en primera carga
+    if (teamsAsync.isLoading && teamsCount == 0) {
       return GridView.count(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         crossAxisCount: isWide ? 3 : 1,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: isWide ? 2.2 : 4,
-        children: stats.map((s) {
-          return StatCard(
-            label: s.label,
-            value: s.value.toString(),
-            emoji: s.emoji,
-            onTap: () => ctx.go(s.route),
-          );
-        }).toList(),
+        childAspectRatio: isWide ? 2.2 : 4.0,
+        children: List.generate(3, (_) => const AppSkeletonStatCard()),
       );
-    });
-  }
-}
+    }
 
-// ── Quick action card ──────────────────────────────────────────────────────
-
-class _QuickActionCard extends StatelessWidget {
-  final String icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _QuickActionCard({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(16),
-      child: SizedBox(
-        width: 160,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(icon, style: const TextStyle(fontSize: 28)),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
-            Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ],
-        ),
+    return Builder(
+      builder: (ctx) => GridView.count(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisCount: isWide ? 3 : 1,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: isWide ? 2.2 : 4.0,
+        children: [
+          StatCard(
+            label: 'Equipos',
+            value: teamsCount.toString(),
+            emoji: '⚽',
+            onTap: () => ctx.go('/dashboard/teams'),
+          ),
+          StatCard(
+            label: 'Solicitudes',
+            value: requestsCount.toString(),
+            emoji: '📋',
+            onTap: () => ctx.go('/dashboard/requests'),
+          ),
+          StatCard(
+            label: 'Partidos',
+            value: matchesCount.toString(),
+            emoji: '🏆',
+            onTap: () => ctx.go('/dashboard/matches'),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── Recent requests section ────────────────────────────────────────────────
+// ─── Quick actions ────────────────────────────────────────────────────────────
+
+class _QuickActionsSection extends StatelessWidget {
+  final bool isWide;
+  const _QuickActionsSection({required this.isWide});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(title: 'Acciones rápidas'),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            QuickActionCard(
+              icon: '⚽',
+              title: 'Crear Equipo',
+              subtitle: 'Registra tu equipo',
+              onTap: () => context.go('/dashboard/teams/new'),
+            ),
+            QuickActionCard(
+              icon: '📋',
+              title: 'Nueva Solicitud',
+              subtitle: 'Busca rivales',
+              onTap: () => context.go('/dashboard/requests/new'),
+            ),
+            QuickActionCard(
+              icon: '🔍',
+              title: 'Ver Solicitudes',
+              subtitle: 'Solicitudes activas',
+              onTap: () => context.go('/dashboard/requests'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Recent requests ──────────────────────────────────────────────────────────
 
 class _RecentRequestsSection extends ConsumerWidget {
-  const _RecentRequestsSection({required this.ref});
-  final WidgetRef ref;
+  const _RecentRequestsSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -303,7 +246,7 @@ class _RecentRequestsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: '📋 Mis Últimas Solicitudes',
+          title: 'Mis Solicitudes',
           action: TextButton(
             onPressed: () => context.go('/dashboard/requests'),
             child: const Text('Ver todas →'),
@@ -311,50 +254,36 @@ class _RecentRequestsSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         requestsAsync.when(
-          loading: () => const Center(child: AppSpinner()),
-          error: (e, _) => Text('Error: $e'),
+          loading: () => const AppSkeletonList(count: 3),
+          error: (_, __) => const AppCallout(
+            message: 'No se pudieron cargar las solicitudes.',
+            type: AppCalloutType.error,
+          ),
           data: (requests) {
-            final myRequests = requests.take(3).toList();
-            if (myRequests.isEmpty) {
-              return const EmptyState(
-                emoji: '📋',
-                title: 'No hay solicitudes recientes',
+            final items = requests.take(3).toList();
+            if (items.isEmpty) {
+              return EmptyState(
+                icon: Icons.assignment_outlined,
+                title: 'Sin solicitudes aún',
+                subtitle: 'Crea tu primera solicitud para encontrar rivales',
+                action: AppButton(
+                  label: 'Crear solicitud',
+                  onPressed: () => context.go('/dashboard/requests/new'),
+                ),
               );
             }
             return Column(
-              children: myRequests.map((r) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: AppCard(
-                    onTap: () => context.go('/dashboard/requests/${r.id}'),
-                    padding: const EdgeInsets.all(14),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                r.team?.name ?? 'Sin equipo',
-                                style:
-                                    Theme.of(context).textTheme.labelLarge,
-                              ),
-                              if (r.footballType != null)
-                                Text(
-                                  AppConstants.footballTypeLabel(r.footballType ?? ''),
-
-                                  style:
-                                      Theme.of(context).textTheme.bodySmall,
-                                ),
-                            ],
-                          ),
-                        ),
-                        StatusBadge(status: r.status.name),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+              children: items.map((r) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _RequestListItem(
+                  name: r.team?.name ?? 'Sin equipo',
+                  subtitle: r.footballType != null
+                      ? AppConstants.footballTypeLabel(r.footballType ?? '')
+                      : null,
+                  status: r.status.name,
+                  onTap: () => context.go('/dashboard/requests/${r.id}'),
+                ),
+              )).toList(),
             );
           },
         ),
@@ -363,11 +292,10 @@ class _RecentRequestsSection extends ConsumerWidget {
   }
 }
 
-// ── Active matches section ─────────────────────────────────────────────────
+// ─── Active matches ───────────────────────────────────────────────────────────
 
 class _ActiveMatchesSection extends ConsumerWidget {
-  const _ActiveMatchesSection({required this.ref});
-  final WidgetRef ref;
+  const _ActiveMatchesSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -377,7 +305,7 @@ class _ActiveMatchesSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: '🤝 Matches Activos',
+          title: 'Matches Activos',
           action: TextButton(
             onPressed: () => context.go('/dashboard/matches'),
             child: const Text('Ver todos →'),
@@ -385,37 +313,30 @@ class _ActiveMatchesSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         matchesAsync.when(
-          loading: () => const Center(child: AppSpinner()),
-          error: (e, _) => Text('Error: $e'),
+          loading: () => const AppSkeletonList(count: 3),
+          error: (_, __) => const AppCallout(
+            message: 'No se pudieron cargar los matches.',
+            type: AppCalloutType.error,
+          ),
           data: (matches) {
             final active = matches.where((m) => m.matchResult == null).take(3).toList();
             if (active.isEmpty) {
               return const EmptyState(
-                emoji: '🤝',
-                title: 'No hay matches activos',
+                icon: Icons.handshake_outlined,
+                title: 'Sin matches activos',
+                subtitle: 'Tus matches confirmados aparecerán aquí',
               );
             }
             return Column(
-              children: active.map((m) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: AppCard(
-                    onTap: () => context.go('/dashboard/matches/${m.id}'),
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${m.team1?.name ?? '?'} vs ${m.team2?.name ?? '?'}',
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        const SizedBox(height: 4),
-                        StatusBadge(status: m.isCompleted ? 'completed' : m.status.name),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+              children: active.map((m) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _MatchListItem(
+                  team1: m.team1?.name ?? '?',
+                  team2: m.team2?.name ?? '?',
+                  status: m.isCompleted ? 'completed' : m.status.name,
+                  onTap: () => context.go('/dashboard/matches/${m.id}'),
+                ),
+              )).toList(),
             );
           },
         ),
@@ -424,11 +345,10 @@ class _ActiveMatchesSection extends ConsumerWidget {
   }
 }
 
-// ── Top teams section ──────────────────────────────────────────────────────
+// ─── Top teams ────────────────────────────────────────────────────────────────
 
 class _TopTeamsSection extends ConsumerWidget {
-  const _TopTeamsSection({required this.ref});
-  final WidgetRef ref;
+  const _TopTeamsSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -437,16 +357,17 @@ class _TopTeamsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionHeader(title: '🏆 Ranking de mis Equipos'),
+        const SectionHeader(title: 'Mis Equipos'),
         const SizedBox(height: 12),
         teamsAsync.when(
-          loading: () => const Center(child: AppSpinner()),
-          error: (e, _) => const SizedBox(),
+          loading: () => const AppSkeletonList(count: 2),
+          error: (_, __) => const SizedBox(),
           data: (teams) {
             if (teams.isEmpty) {
               return EmptyState(
-                emoji: '⚽',
+                icon: Icons.groups_outlined,
                 title: 'Aún no tienes equipos',
+                subtitle: 'Crea tu primer equipo para empezar a jugar',
                 action: AppButton(
                   label: 'Crear equipo',
                   onPressed: () => context.go('/dashboard/teams/new'),
@@ -455,64 +376,64 @@ class _TopTeamsSection extends ConsumerWidget {
             }
             final sorted = [...teams]
               ..sort((a, b) => b.gamesWon.compareTo(a.gamesWon));
-
             return AppCard(
-              padding: EdgeInsets.zero,
+              noPadding: true,
               child: Column(
                 children: sorted.asMap().entries.map((entry) {
-                  final i = entry.key;
+                  final i    = entry.key;
                   final team = entry.value;
                   final winRate = team.winRate.toStringAsFixed(0);
+                  final isLast = i == sorted.length - 1;
 
                   return Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
                     decoration: BoxDecoration(
-                      border: i < sorted.length - 1
-                          ? Border(
-                              bottom: BorderSide(
-                                  color: AppTheme.border, width: 1))
-                          : null,
+                      border: isLast
+                          ? null
+                          : Border(
+                              bottom: BorderSide(color: AppTheme.border, width: 1),
+                            ),
                     ),
                     child: Row(
                       children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: i == 0 ? AppTheme.primary : AppTheme.surfaceVariant,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            '#${i + 1}',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: i == 0 ? Colors.white : AppTheme.textSec,
-                            ),
-                          ),
-                        ),
+                        _RankBadge(position: i + 1),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             team.name,
-                            style: Theme.of(context).textTheme.labelLarge,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.text,
+                            ),
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              '${team.gamesWon}V ${team.gamesDrawn}E ${team.gamesLost}D',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            Text(
-                              '$winRate% victorias',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textMuted,
+                            _RecordLabel(label: '${team.gamesWon}V', color: AppTheme.success),
+                            const SizedBox(width: 6),
+                            _RecordLabel(label: '${team.gamesDrawn}E', color: AppTheme.textMuted),
+                            const SizedBox(width: 6),
+                            _RecordLabel(label: '${team.gamesLost}D', color: AppTheme.error),
+                            const SizedBox(width: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: double.tryParse(winRate) != null && double.parse(winRate) >= 50
+                                    ? AppTheme.primaryLight
+                                    : AppTheme.surfaceVariant,
+                                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                              ),
+                              child: Text(
+                                '$winRate%',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                  color: double.tryParse(winRate) != null && double.parse(winRate) >= 50
+                                      ? AppTheme.primaryDark
+                                      : AppTheme.textSec,
+                                ),
                               ),
                             ),
                           ],
@@ -526,6 +447,145 @@ class _TopTeamsSection extends ConsumerWidget {
           },
         ),
       ],
+    );
+  }
+}
+
+// ─── List item helpers ────────────────────────────────────────────────────────
+
+class _RequestListItem extends StatelessWidget {
+  final String name;
+  final String? subtitle;
+  final String status;
+  final VoidCallback onTap;
+
+  const _RequestListItem({
+    required this.name,
+    required this.status,
+    required this.onTap,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.text,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          StatusBadge(status: status),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: AppTheme.textMuted),
+        ],
+      ),
+    );
+  }
+}
+
+class _MatchListItem extends StatelessWidget {
+  final String team1;
+  final String team2;
+  final String status;
+  final VoidCallback onTap;
+
+  const _MatchListItem({
+    required this.team1,
+    required this.team2,
+    required this.status,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      child: Row(
+        children: [
+          AppAvatar(name: team1, size: 32),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              '$team1 vs $team2',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.text,
+              ),
+            ),
+          ),
+          StatusBadge(status: status),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: AppTheme.textMuted),
+        ],
+      ),
+    );
+  }
+}
+
+class _RankBadge extends StatelessWidget {
+  final int position;
+  const _RankBadge({required this.position});
+
+  @override
+  Widget build(BuildContext context) {
+    final isFirst = position == 1;
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        color: isFirst ? AppTheme.primary : AppTheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        '#$position',
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: isFirst ? Colors.white : AppTheme.textSec,
+        ),
+      ),
+    );
+  }
+}
+
+class _RecordLabel extends StatelessWidget {
+  final String label;
+  final Color color;
+  const _RecordLabel({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: color,
+      ),
     );
   }
 }

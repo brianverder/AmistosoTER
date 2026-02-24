@@ -87,7 +87,12 @@ class _SideNav extends StatelessWidget {
                     color: AppTheme.primaryFaint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
-                  child: const Text('⚽', style: TextStyle(fontSize: 20)),
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 24,
+                    height: 24,
+                    errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 20),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
@@ -256,7 +261,12 @@ class _MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
               color: AppTheme.primaryFaint,
               borderRadius: BorderRadius.circular(AppTheme.radiusXs),
             ),
-            child: const Text('⚽', style: TextStyle(fontSize: 18)),
+            child: Image.asset(
+              'assets/images/logo.png',
+              width: 22,
+              height: 22,
+              errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 18),
+            ),
           ),
           const SizedBox(width: 10),
           Text('Tercer Tiempo',

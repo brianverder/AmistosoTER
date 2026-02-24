@@ -97,7 +97,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           color: AppTheme.primaryFaint,
                           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                         ),
-                        child: const Text('⚽', style: TextStyle(fontSize: 36)),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 50,
+                          height: 50,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 36),
+                        ),
                       ),
                       const SizedBox(height: 20),
                       Text(

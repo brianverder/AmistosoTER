@@ -125,7 +125,14 @@ class _WideLayout extends StatelessWidget {
                             color: Colors.white.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                           ),
-                          child: const Text('⚽', style: TextStyle(fontSize: 28)),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            width: 40,
+                            height: 40,
+                            color: Colors.white,
+                            colorBlendMode: BlendMode.srcIn,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: Colors.white, size: 28),
+                          ),
                         ),
                         const SizedBox(width: 14),
                         Column(
@@ -334,7 +341,12 @@ class _FormContent extends StatelessWidget {
                               color: AppTheme.primaryFaint,
                               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                             ),
-                            child: const Text('⚽', style: TextStyle(fontSize: 36)),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              width: 50,
+                              height: 50,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 36),
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(
