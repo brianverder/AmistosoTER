@@ -21,6 +21,7 @@ class AppConstants {
   static const String matchesEndpoint = '/api/matches';
   static const String publicRequestsEndpoint = '/api/public/requests';
   static const String usersCountEndpoint = '/api/public/users-count';
+  static const String topTeamsEndpoint = '/api/stats/top-teams';
 
   // ─── Rutas de navegación ─────────────────────────────────────────────────
   static const String routeLogin = '/login';
