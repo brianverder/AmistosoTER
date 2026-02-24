@@ -153,7 +153,7 @@ class _StatsSection extends ConsumerWidget {
         crossAxisCount: isWide ? 3 : 1,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: isWide ? 2.2 : 4.0,
+        childAspectRatio: isWide ? 1.7 : 3.2,
         children: List.generate(3, (_) => const AppSkeletonStatCard()),
       );
     }
@@ -165,7 +165,7 @@ class _StatsSection extends ConsumerWidget {
         crossAxisCount: isWide ? 3 : 1,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
-        childAspectRatio: isWide ? 2.2 : 4.0,
+        childAspectRatio: isWide ? 1.7 : 3.2,
         children: [
           StatCard(
             label: 'Equipos',

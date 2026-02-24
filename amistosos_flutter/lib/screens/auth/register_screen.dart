@@ -98,7 +98,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                         ),
                         child: Image.asset(
-                          'assets/images/logo.png',
+                          'assets/images/ter.png',
                           width: 50,
                           height: 50,
                           errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 36),

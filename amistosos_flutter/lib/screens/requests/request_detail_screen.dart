@@ -483,6 +483,7 @@ class _MatchActionState extends ConsumerState<_MatchAction> {
       ref.invalidate(requestDetailProvider);
       if (mounted) {
         await _showContactModal(context, matchData);
+        if (mounted) context.go(AppRoutes.matches);
       }
     } catch (e) {
       if (mounted) {

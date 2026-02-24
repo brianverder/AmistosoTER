@@ -120,11 +120,9 @@ class _TopBar extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(6),
               child: Image.asset(
-                'assets/images/logo.png',
+                'assets/images/ter.png',
                 width: 24,
                 height: 24,
-                color: Colors.white,
-                colorBlendMode: BlendMode.srcIn,
                 errorBuilder: (_, __, ___) =>
                     const Icon(Icons.sports_soccer_rounded, color: Colors.white, size: 18),
               ),

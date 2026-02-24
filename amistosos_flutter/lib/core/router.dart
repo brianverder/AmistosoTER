@@ -116,7 +116,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/dashboard/requests',
             name: 'requests',
-            builder: (context, state) => const RequestsScreen(),
+            builder: (context, state) => RequestsScreen(
+              initialTab: int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,
+            ),
           ),
           GoRoute(
             path: '/dashboard/requests/new',

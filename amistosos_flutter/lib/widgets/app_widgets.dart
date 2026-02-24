@@ -193,19 +193,21 @@ class _StatCardState extends State<StatCard> {
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 40,
-                    height: 40,
+                    width: 56,
+                    height: 56,
                     decoration: BoxDecoration(
-                      color: color.withAlpha(18),
-                      borderRadius: BorderRadius.circular(10),
+                      color: color.withAlpha(22),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
-                      child: Text(widget.emoji, style: const TextStyle(fontSize: 20)),
+                      child: Text(widget.emoji, style: const TextStyle(fontSize: 30)),
                     ),
                   ),
                   if (widget.onTap != null)
@@ -214,27 +216,31 @@ class _StatCardState extends State<StatCard> {
                       transform: _hovered
                           ? Matrix4.translationValues(2, 0, 0)
                           : Matrix4.identity(),
-                      child: Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textMuted),
+                      child: Icon(Icons.arrow_forward_ios, size: 13, color: AppTheme.textMuted),
                     ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                widget.value,
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.text,
-                      height: 1,
-                      letterSpacing: -0.5,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textMuted,
-                    ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    widget.value,
+                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.text,
+                          height: 1,
+                          letterSpacing: -1,
+                        ),
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    _label,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textMuted,
+                        ),
+                  ),
+                ],
               ),
             ],
           ),

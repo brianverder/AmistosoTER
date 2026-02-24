@@ -20,14 +20,14 @@ const rateLimitStore = new Map<string, RateLimitEntry>();
 
 // Configuración por endpoint
 const RATE_LIMIT_CONFIGS: Record<string, RateLimitConfig> = {
-  // Auth endpoints - muy restrictivos
+  // Auth endpoints
   '/api/auth/register': {
     windowMs: 15 * 60 * 1000, // 15 minutos
-    maxRequests: 5, // Solo 5 registros por IP cada 15 min
+    maxRequests: 20, // 20 registros por IP cada 15 min
   },
   '/api/auth/signin': {
     windowMs: 15 * 60 * 1000, // 15 minutos
-    maxRequests: 10, // 10 intentos de login cada 15 min
+    maxRequests: 20, // 20 intentos de login cada 15 min
   },
 
   // API endpoints - moderadamente restrictivos

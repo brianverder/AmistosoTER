@@ -11,7 +11,8 @@ import '../../providers/teams_provider.dart';
 import '../../widgets/app_widgets.dart';
 
 class RequestsScreen extends ConsumerStatefulWidget {
-  const RequestsScreen({super.key});
+  final int initialTab;
+  const RequestsScreen({super.key, this.initialTab = 0});
 
   @override
   ConsumerState<RequestsScreen> createState() => _RequestsScreenState();
@@ -26,7 +27,11 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 1),
+    );
     _tabCtrl.addListener(() => setState(() {}));
   }
 
@@ -629,7 +634,10 @@ class _MatchButtonState extends ConsumerState<_MatchButton> {
       final service = ref.read(requestsServiceProvider);
       await service.matchRequest(widget.requestId, teamId);
       ref.invalidate(requestsProvider);
-      if (mounted) showAppToast(context, '¡Partido confirmado! 🎉');
+      if (mounted) {
+        showAppToast(context, '¡Partido confirmado! 🎉');
+        context.go(AppRoutes.matches);
+      }
     } catch (e) {
       if (mounted) {
         showAppToast(context, 'Error: $e', type: AppToastType.error);

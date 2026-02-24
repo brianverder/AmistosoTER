@@ -21,6 +21,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _showPassword = false;
   String? _errorMessage;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
 
   @override
   void dispose() {
@@ -30,6 +31,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleSubmit() async {
+    setState(() => _autovalidateMode = AutovalidateMode.onUserInteraction);
     if (!_formKey.currentState!.validate()) return;
     setState(() => _errorMessage = null);
 
@@ -60,6 +62,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       body: isWide ? _WideLayout(
         formContent: _FormContent(
           formKey: _formKey,
+          autovalidateMode: _autovalidateMode,
           emailController: _emailController,
           passwordController: _passwordController,
           showPassword: _showPassword,
@@ -72,6 +75,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ) : _NarrowLayout(
         formContent: _FormContent(
           formKey: _formKey,
+          autovalidateMode: _autovalidateMode,
           emailController: _emailController,
           passwordController: _passwordController,
           showPassword: _showPassword,
@@ -98,124 +102,159 @@ class _WideLayout extends StatelessWidget {
       children: [
         // Left: Branding panel
         Expanded(
-          child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF14532D), // green-900
-                  Color(0xFF166534), // green-800
-                  Color(0xFF15803D), // green-700
-                ],
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Background image
+              Image.asset(
+                'assets/images/stadium_bg.jpg',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
+                errorBuilder: (_, __, ___) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF14532D), Color(0xFF15803D)],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(48),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Logo
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                          ),
-                          child: Image.asset(
-                            'assets/images/logo.png',
-                            width: 40,
-                            height: 40,
-                            color: Colors.white,
-                            colorBlendMode: BlendMode.srcIn,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: Colors.white, size: 28),
-                          ),
-                        ),
-                        const SizedBox(width: 14),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Tercer Tiempo',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800,
-                                color: Colors.white,
-                                letterSpacing: -0.3,
-                              ),
+              // Dark gradient overlay – lighter at top, heavier at bottom
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.30),
+                      Colors.black.withOpacity(0.72),
+                    ],
+                  ),
+                ),
+              ),
+              // Subtle green brand tint
+              Container(color: const Color(0xFF052E16).withOpacity(0.18)),
+              // Content
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(48),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Logo
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                              border: Border.all(color: Colors.white.withOpacity(0.25)),
                             ),
+                            child: Image.asset(
+                              'assets/images/ter.png',
+                              width: 40,
+                              height: 40,
+                              errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: Colors.white, size: 28),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'TERCER TIEMPO',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 1.0,
+                                  shadows: [
+                                    Shadow(color: Colors.black.withOpacity(0.5), blurRadius: 8, offset: const Offset(0, 2)),
+                                  ],
+                                ),
+                              ),
+                              Text(
+                                'Coordina tus partidos',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white.withOpacity(0.80),
+                                  fontWeight: FontWeight.w400,
+                                  shadows: [
+                                    Shadow(color: Colors.black.withOpacity(0.6), blurRadius: 6),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      const Spacer(),
+
+                      // Hero text
+                      Text(
+                        'Encuentra\ntu rival\nperfecto.',
+                        style: TextStyle(
+                          fontSize: 56,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.05,
+                          letterSpacing: -1.5,
+                          shadows: [
+                            Shadow(color: Colors.black.withOpacity(0.7), blurRadius: 16, offset: const Offset(0, 3)),
+                            Shadow(color: Colors.black.withOpacity(0.4), blurRadius: 4),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                          border: Border.all(color: Colors.white.withOpacity(0.30)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.sports_soccer, color: Colors.white.withOpacity(0.9), size: 16),
+                            const SizedBox(width: 8),
                             Text(
-                              'Coordina tus partidos',
+                              'Fútbol 5 • 7 • 8 • 11 • Futsal',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.white.withOpacity(0.7),
-                                fontWeight: FontWeight.w400,
+                                color: Colors.white.withOpacity(0.95),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
-
-                    const Spacer(),
-
-                    // Hero text
-                    Text(
-                      'Encuentra\ntu rival\nperfecto.',
-                      style: TextStyle(
-                        fontSize: 52,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 1.1,
-                        letterSpacing: -1.5,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                        border: Border.all(color: Colors.white.withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.sports_soccer, color: Colors.white.withOpacity(0.8), size: 16),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Fútbol 5 • 7 • 8 • 11 • Futsal',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.white.withOpacity(0.85),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
 
-                    const Spacer(),
+                      const Spacer(),
 
-                    // Stats
-                    _StatsRow(),
+                      // Stats
+                      _StatsRow(),
 
-                    const SizedBox(height: 32),
-                    Text(
-                      '© 2025 Tercer Tiempo',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.white.withOpacity(0.4),
+                      const SizedBox(height: 32),
+                      Text(
+                        '© 2025 Tercer Tiempo',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.50),
+                          shadows: [
+                            Shadow(color: Colors.black.withOpacity(0.6), blurRadius: 4),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
 
@@ -256,11 +295,14 @@ class _StatBubble extends StatelessWidget {
       children: [
         Text(
           number,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: Colors.white,
             height: 1,
+            shadows: [
+              Shadow(color: Colors.black.withOpacity(0.6), blurRadius: 8, offset: const Offset(0, 2)),
+            ],
           ),
         ),
         const SizedBox(height: 2),
@@ -268,8 +310,11 @@ class _StatBubble extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.6),
-            fontWeight: FontWeight.w400,
+            color: Colors.white.withOpacity(0.75),
+            fontWeight: FontWeight.w500,
+            shadows: [
+              Shadow(color: Colors.black.withOpacity(0.6), blurRadius: 6),
+            ],
           ),
         ),
       ],
@@ -293,6 +338,7 @@ class _NarrowLayout extends StatelessWidget {
 
 class _FormContent extends StatelessWidget {
   final GlobalKey<FormState> formKey;
+  final AutovalidateMode autovalidateMode;
   final TextEditingController emailController;
   final TextEditingController passwordController;
   final bool showPassword;
@@ -304,6 +350,7 @@ class _FormContent extends StatelessWidget {
 
   const _FormContent({
     required this.formKey,
+    required this.autovalidateMode,
     required this.emailController,
     required this.passwordController,
     required this.showPassword,
@@ -326,6 +373,7 @@ class _FormContent extends StatelessWidget {
               constraints: const BoxConstraints(maxWidth: 400),
               child: Form(
                 key: formKey,
+                autovalidateMode: autovalidateMode,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -342,7 +390,7 @@ class _FormContent extends StatelessWidget {
                               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                             ),
                             child: Image.asset(
-                              'assets/images/logo.png',
+                              'assets/images/ter.png',
                               width: 50,
                               height: 50,
                               errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 36),
@@ -350,9 +398,10 @@ class _FormContent extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Tercer Tiempo',
+                            'TERCER TIEMPO',
                             style: Theme.of(ctx).textTheme.headlineLarge?.copyWith(
-                                  fontWeight: FontWeight.w800,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.0,
                                 ),
                           ),
                           const SizedBox(height: 32),
@@ -387,8 +436,9 @@ class _FormContent extends StatelessWidget {
                       hintText: 'tu@email.com',
                       keyboardType: TextInputType.emailAddress,
                       validator: (v) {
-                        if (v == null || v.isEmpty) return 'Ingresa tu email';
-                        if (!v.contains('@')) return 'Email inválido';
+                        if (v == null || v.trim().isEmpty) return 'Ingresa tu email';
+                        final emailRegex = RegExp(r'^[\w.+\-]+@[\w\-]+\.[a-zA-Z]{2,}$');
+                        if (!emailRegex.hasMatch(v.trim())) return 'El email no tiene un formato válido';
                         return null;
                       },
                     ),

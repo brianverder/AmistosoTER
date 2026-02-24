@@ -91,7 +91,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
       ref.invalidate(requestsProvider);
       if (mounted) {
         showAppToast(context, 'Solicitud creada exitosamente');
-        context.go(AppRoutes.requests);
+        context.go('${AppRoutes.requests}?tab=1');
       }
     } catch (e) {
       setState(() => _error = e.toString());
@@ -240,7 +240,7 @@ class _CreateRequestScreenState extends ConsumerState<CreateRequestScreen> {
                     hintText: 'Ej: \$1200 (pesos)',
                   ),
                   const SizedBox(height: AppConstants.spacingMd),
-                  _FieldLabel('FECHA DEL PARTIDO'),
+                  _FieldLabel('POSIBLE FECHA DEL PARTIDO'),
                   GestureDetector(
                     onTap: _pickDate,
                     child: Container(

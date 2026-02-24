@@ -88,7 +88,7 @@ class _SideNav extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Image.asset(
-                    'assets/images/logo.png',
+                    'assets/images/ter.png',
                     width: 24,
                     height: 24,
                     errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 20),
@@ -118,7 +118,7 @@ class _SideNav extends StatelessWidget {
                 _NavItem(icon: Icons.grid_view_rounded, label: 'Dashboard', path: '/dashboard', currentPath: currentPath),
                 _NavItem(icon: Icons.groups_rounded, label: 'Mis Equipos', path: '/dashboard/teams', currentPath: currentPath),
                 _NavItem(icon: Icons.assignment_rounded, label: 'Solicitudes', path: '/dashboard/requests', currentPath: currentPath),
-                _NavItem(icon: Icons.handshake_rounded, label: 'Mis Matches', path: '/dashboard/matches', currentPath: currentPath),
+                _NavItem(icon: Icons.handshake_rounded, label: 'Mis Partidos', path: '/dashboard/matches', currentPath: currentPath),
                 const SizedBox(height: 8),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 6),
@@ -262,7 +262,7 @@ class _MobileAppBar extends StatelessWidget implements PreferredSizeWidget {
               borderRadius: BorderRadius.circular(AppTheme.radiusXs),
             ),
             child: Image.asset(
-              'assets/images/logo.png',
+              'assets/images/ter.png',
               width: 22,
               height: 22,
               errorBuilder: (_, __, ___) => const Icon(Icons.sports_soccer_rounded, color: AppTheme.primary, size: 18),
@@ -371,7 +371,7 @@ class _BottomNav extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.handshake_outlined, color: AppTheme.textMuted),
             selectedIcon: Icon(Icons.handshake_rounded, color: AppTheme.primary),
-            label: 'Matches',
+            label: 'Partidos',
           ),
         ],
       ),
