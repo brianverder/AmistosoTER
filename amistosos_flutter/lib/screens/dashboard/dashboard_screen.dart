@@ -545,7 +545,7 @@ class _ActiveMatchesSection extends ConsumerWidget {
       children: [
         _ColoredSectionHeader(
           emoji: '🤝',
-          title: 'Matches Activos',
+          title: 'Partidos Activos',
           color: AppTheme.accent,
           action: TextButton(
             onPressed: () => context.go('/dashboard/matches'),
@@ -559,7 +559,7 @@ class _ActiveMatchesSection extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const AppCallout(
-                message: 'No se pudieron cargar los matches.',
+                message: 'No se pudieron cargar los partidos.',
                 type: AppCalloutType.error,
               ),
               TextButton.icon(
@@ -574,8 +574,8 @@ class _ActiveMatchesSection extends ConsumerWidget {
             if (active.isEmpty) {
               return const _EmptySection(
                 emoji: '🏟️',
-                title: 'Sin matches activos',
-                subtitle: 'Tus matches confirmados aparecerán aquí',
+                title: 'Sin partidos activos',
+                subtitle: 'Tus partidos confirmados aparecerán aquí',
               );
             }
             return Column(
