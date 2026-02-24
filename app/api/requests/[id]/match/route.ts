@@ -94,10 +94,10 @@ export async function POST(
             select: { id: true, name: true, instagram: true },
           },
           user1: {
-            select: { id: true, name: true, phone: true },
+            select: { id: true, name: true, email: true, phone: true },
           },
           user2: {
-            select: { id: true, name: true, phone: true },
+            select: { id: true, name: true, email: true, phone: true },
           },
           matchRequest: true,
         },
