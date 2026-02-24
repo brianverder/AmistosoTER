@@ -749,77 +749,485 @@ class _AppButtonState extends State<AppButton> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CARD
+// CARD  ·  AppCard
 // ─────────────────────────────────────────────────────────────────────────────
 
+enum AppCardVariant {
+  /// Blanca con sombra suave — para contenido destacado (default).
+  elevated,
+
+  /// Blanca con borde sutil — para listas y grupos de items.
+  outlined,
+
+  /// Fondo gris muy claro, sin sombra — para secciones internas.
+  filled,
+
+  /// Sin fondo ni borde — sólo el contenido, borde aparece en hover.
+  ghost,
+}
+
+enum AppCardState {
+  /// Estado por defecto.
+  normal,
+
+  /// Skeleton/spinner — deshabilita interacción.
+  loading,
+
+  /// Borde y tinte rojo — error o alerta.
+  error,
+
+  /// Borde y tinte verde — confirmación.
+  success,
+
+  /// Fondo primary-faint — resaltado activo/seleccionado.
+  highlighted,
+}
+
+/// ─── AppCard ─────────────────────────────────────────────────────────────────
+///
+/// Componente base de card para toda la app.
+///
+/// **Uso simplificado (retrocompatible):**
+/// ```dart
+/// AppCard(child: MyWidget())
+/// AppCard(onTap: () {}, child: MyWidget())
+/// ```
+///
+/// **Uso con estructura completa:**
+/// ```dart
+/// AppCard(
+///   title: 'Mi título',
+///   subtitle: 'Texto secundario',
+///   trailing: StatusBadge(status: 'active'),
+///   actions: [AppButton(label: 'Ver'), AppButton(label: 'Editar')],
+///   accentColor: AppTheme.primary,
+///   child: MyContent(),
+/// )
+/// ```
 class AppCard extends StatefulWidget {
-  final Widget child;
+  // ── Contenido estructurado ──────────────────────────────────────────────
+  /// Widget hijo principal. Si se combina con [title]/[subtitle], se muestra
+  /// debajo del header.
+  final Widget? child;
+
+  /// Título en el header de la card.
+  final String? title;
+
+  /// Subtítulo debajo del título.
+  final String? subtitle;
+
+  /// Widget al inicio del header (ícono, avatar, etc.).
+  final Widget? leading;
+
+  /// Widget al final del header (badge, botón, etc.).
+  final Widget? trailing;
+
+  /// Botones de acción al pie de la card. Aparecen separados por un divider.
+  final List<Widget>? actions;
+
+  // ── Estado y variante ───────────────────────────────────────────────────
+  final AppCardState state;
+  final AppCardVariant variant;
+
+  // ── Apariencia ──────────────────────────────────────────────────────────
+  /// Padding del contenido. Default: 20px all.
   final EdgeInsets? padding;
-  final VoidCallback? onTap;
+
+  /// Omite el padding (útil para listas internas con items propios). Alias retrocompat.
+  final bool noPadding;
+
+  /// Color de fondo personalizado.
+  final Color? backgroundColor;
+
+  /// Color del borde personalizado.
   final Color? borderColor;
   final double borderWidth;
+
+  /// Sombra personalizada.
   final List<BoxShadow>? boxShadow;
-  final bool noPadding;
+
+  /// Barra de acento vertical izquierda (4px de ancho). Color configurable.
+  final Color? accentColor;
+
+  // ── Interacción ─────────────────────────────────────────────────────────
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+
+  // ── Animación de entrada ────────────────────────────────────────────────
+  /// Activa la animación fade + slide-up al construirse. Default: true.
+  final bool animate;
+
+  /// Delay de la animación de entrada (útil para listas con stagger).
+  final Duration animateDelay;
 
   const AppCard({
     super.key,
-    required this.child,
+    this.child,
+    this.title,
+    this.subtitle,
+    this.leading,
+    this.trailing,
+    this.actions,
+    this.state     = AppCardState.normal,
+    this.variant   = AppCardVariant.elevated,
     this.padding,
-    this.onTap,
+    this.noPadding = false,
+    this.backgroundColor,
     this.borderColor,
     this.borderWidth = 1,
     this.boxShadow,
-    this.noPadding = false,
-  });
+    this.accentColor,
+    this.onTap,
+    this.onLongPress,
+    this.animate      = true,
+    this.animateDelay = Duration.zero,
+  }) : assert(
+          child != null || title != null,
+          'AppCard requiere al least child o title',
+        );
 
   @override
   State<AppCard> createState() => _AppCardState();
 }
 
-class _AppCardState extends State<AppCard> {
-  bool _hovered = false;
+class _AppCardState extends State<AppCard>
+    with SingleTickerProviderStateMixin {
+  bool _hovered  = false;
+  bool _pressed  = false;
+
+  late final AnimationController _entryCtrl;
+  late final Animation<double>   _fadeAnim;
+  late final Animation<Offset>   _slideAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _entryCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 280),
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _entryCtrl,
+      curve: Curves.easeOut,
+    );
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.04),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _entryCtrl, curve: Curves.easeOut));
+
+    if (widget.animate) {
+      if (widget.animateDelay == Duration.zero) {
+        _entryCtrl.forward();
+      } else {
+        Future.delayed(widget.animateDelay, () {
+          if (mounted) _entryCtrl.forward();
+        });
+      }
+    } else {
+      _entryCtrl.value = 1.0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _entryCtrl.dispose();
+    super.dispose();
+  }
+
+  // ── Tokens de estado ────────────────────────────────────────────────────────
+
+  Color get _bgColor {
+    if (widget.backgroundColor != null) return widget.backgroundColor!;
+    return switch (widget.state) {
+      AppCardState.error       => AppTheme.errorLight,
+      AppCardState.success     => AppTheme.primaryFaint,
+      AppCardState.highlighted => AppTheme.primaryFaint,
+      _ => switch (widget.variant) {
+          AppCardVariant.filled => AppTheme.surfaceVariant,
+          AppCardVariant.ghost  => _hovered ? AppTheme.surfaceVariant : Colors.transparent,
+          _                     => AppTheme.surface,
+        },
+    };
+  }
+
+  Color get _borderColor {
+    if (widget.borderColor != null && widget.state == AppCardState.normal) {
+      return widget.borderColor!;
+    }
+    return switch (widget.state) {
+      AppCardState.error       => AppTheme.error.withAlpha(80),
+      AppCardState.success     => AppTheme.primary.withAlpha(80),
+      AppCardState.highlighted => AppTheme.primary.withAlpha(60),
+      _ => _hovered ? AppTheme.borderStrong : AppTheme.border,
+    };
+  }
+
+  bool get _showBorder => switch (widget.variant) {
+        AppCardVariant.elevated => true,
+        AppCardVariant.outlined => true,
+        AppCardVariant.filled   => false,
+        AppCardVariant.ghost    => _hovered,
+      };
+
+  List<BoxShadow> get _shadow {
+    if (widget.boxShadow != null) return widget.boxShadow!;
+    return switch (widget.variant) {
+      AppCardVariant.elevated =>
+          _pressed ? AppTheme.shadowXs : (_hovered ? AppTheme.shadowMd : AppTheme.shadowSm),
+      AppCardVariant.outlined =>
+          _pressed ? [] : (_hovered ? AppTheme.shadowSm : []),
+      _ => [],
+    };
+  }
+
+  // ── Build ────────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
-    final hasInteraction = widget.onTap != null;
+    final hasInteraction = widget.onTap != null || widget.onLongPress != null;
+    final isDisabled     = widget.state == AppCardState.loading;
+    final radius         = BorderRadius.circular(AppTheme.radiusLg);
 
-    return MouseRegion(
-      cursor: hasInteraction ? SystemMouseCursors.click : MouseCursor.defer,
-      onEnter: hasInteraction ? (_) => setState(() => _hovered = true) : null,
-      onExit: hasInteraction ? (_) => setState(() => _hovered = false) : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(
-            color: widget.borderColor ??
-                (_hovered ? AppTheme.borderStrong : AppTheme.border),
-            width: widget.borderWidth,
+    Widget card = AnimatedContainer(
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+      transform: _pressed
+          ? Matrix4.diagonal3Values(0.992, 0.992, 1.0)
+          : Matrix4.identity(),
+      transformAlignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: _bgColor,
+        borderRadius: radius,
+        border: _showBorder
+            ? Border.all(color: _borderColor, width: widget.borderWidth)
+            : null,
+        boxShadow: _shadow,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: hasInteraction && !isDisabled
+          ? InkWell(
+              onTap: widget.onTap,
+              onLongPress: widget.onLongPress,
+              onHighlightChanged: (v) => setState(() => _pressed = v),
+              borderRadius: radius,
+              splashColor:    AppTheme.primary.withAlpha(8),
+              highlightColor: AppTheme.surfaceVariant.withAlpha(180),
+              child: _body(),
+            )
+          : _body(),
+    );
+
+    // Accent bar izquierda
+    if (widget.accentColor != null) {
+      card = Stack(
+        children: [
+          card,
+          Positioned(
+            left: 0, top: 0, bottom: 0,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 3.5,
+              decoration: BoxDecoration(
+                color: widget.accentColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft:    Radius.circular(AppTheme.radiusLg),
+                  bottomLeft: Radius.circular(AppTheme.radiusLg),
+                ),
+              ),
+            ),
           ),
-          boxShadow: widget.boxShadow ??
-              (_hovered ? AppTheme.shadowMd : AppTheme.shadowSm),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: hasInteraction
-            ? InkWell(
-                onTap: widget.onTap,
-                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                splashColor: AppTheme.primary.withAlpha(6),
-                highlightColor: AppTheme.surfaceVariant,
-                child: _content(),
-              )
-            : _content(),
+        ],
+      );
+    }
+
+    // Hover region
+    if (hasInteraction && !isDisabled) {
+      card = MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit:  (_) => setState(() { _hovered = false; _pressed = false; }),
+        child: card,
+      );
+    }
+
+    // Animación de entrada
+    return FadeTransition(
+      opacity: _fadeAnim,
+      child: SlideTransition(
+        position: _slideAnim,
+        child: card,
       ),
     );
   }
 
-  Widget _content() {
-    if (widget.noPadding) return widget.child;
+  // ── Cuerpo ───────────────────────────────────────────────────────────────────
+
+  Widget _body() {
+    final hasHeader = widget.title != null || widget.leading != null || widget.trailing != null;
+    final hasActions = widget.actions != null && widget.actions!.isNotEmpty;
+    final innerPad   = widget.padding ?? const EdgeInsets.all(AppTheme.sp20);
+
+    // Sólo child, sin estructura (retrocompat)
+    if (!hasHeader && !hasActions) {
+      if (widget.noPadding || widget.child == null) {
+        return widget.child ?? const SizedBox.shrink();
+      }
+      return Padding(padding: innerPad, child: widget.child);
+    }
+
+    // Estructura completa: header + child + actions
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Header
+        if (hasHeader)
+          Padding(
+            padding: widget.noPadding
+                ? EdgeInsets.zero
+                : innerPad.copyWith(bottom: widget.child != null ? AppTheme.sp12 : null),
+            child: _CardHeader(
+              title:    widget.title,
+              subtitle: widget.subtitle,
+              leading:  widget.leading,
+              trailing: widget.trailing,
+            ),
+          ),
+
+        // Divider si hay header y child
+        if (hasHeader && widget.child != null)
+          const Divider(height: 1, thickness: 1),
+
+        // Contenido
+        if (widget.child != null)
+          Padding(
+            padding: widget.noPadding
+                ? EdgeInsets.zero
+                : innerPad.copyWith(
+                    top:    hasHeader  ? AppTheme.sp16 : null,
+                    bottom: hasActions ? AppTheme.sp12 : null,
+                  ),
+            child: widget.child,
+          ),
+
+        // Footer de acciones
+        if (hasActions) ...[
+          const Divider(height: 1, thickness: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.sp16,
+              vertical: AppTheme.sp12,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: widget.actions!
+                  .map((a) => a)
+                  .expand((a) => [a, const SizedBox(width: 8)])
+                  .toList()
+                ..removeLast(),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Header interno reutilizable.
+class _CardHeader extends StatelessWidget {
+  final String?  title;
+  final String?  subtitle;
+  final Widget?  leading;
+  final Widget?  trailing;
+
+  const _CardHeader({
+    this.title,
+    this.subtitle,
+    this.leading,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        if (leading != null) ...[leading!, const SizedBox(width: AppTheme.sp12)],
+        if (title != null)
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title!,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppTheme.text,
+                        fontWeight: FontWeight.w700,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppTheme.textMuted,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          )
+        else
+          const Spacer(),
+        if (trailing != null) ...[const SizedBox(width: AppTheme.sp12), trailing!],
+      ],
+    );
+  }
+}
+
+/// Divider semántico para separar secciones dentro de una misma card.
+///
+/// ```dart
+/// AppCard(child: Column(children: [
+///   SectionA(),
+///   AppCardDivider(label: 'Estadísticas'),
+///   SectionB(),
+/// ]))
+/// ```
+class AppCardDivider extends StatelessWidget {
+  final String? label;
+
+  const AppCardDivider({super.key, this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    if (label == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppTheme.sp12),
+        child: Divider(height: 1),
+      );
+    }
     return Padding(
-      padding: widget.padding ?? const EdgeInsets.all(20),
-      child: widget.child,
+      padding: const EdgeInsets.symmetric(vertical: AppTheme.sp16),
+      child: Row(
+        children: [
+          const Expanded(child: Divider(height: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTheme.sp12),
+            child: Text(
+              label!.toUpperCase(),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.textMuted,
+                    letterSpacing: 0.8,
+                  ),
+            ),
+          ),
+          const Expanded(child: Divider(height: 1)),
+        ],
+      ),
     );
   }
 }
