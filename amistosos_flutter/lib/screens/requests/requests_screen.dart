@@ -372,167 +372,443 @@ class _RequestCard extends ConsumerStatefulWidget {
 class _RequestCardState extends ConsumerState<_RequestCard> {
   bool _hovered = false;
 
-  Color get _accentColor => switch (widget.request.status.name) {
-        'active'    => AppTheme.primary,
-        'matched'   => AppTheme.info,
-        'completed' => AppTheme.textMuted,
-        'cancelled' => AppTheme.error,
-        _           => AppTheme.borderStrong,
-      };
-
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isOwner = currentUser?.id == widget.request.userId;
     final req = widget.request;
+    final team = req.team;
+    final hasStats = team != null && (team.totalGames ?? 0) > 0;
+    final winPct = hasStats
+        ? ((team!.gamesWon ?? 0) / (team.totalGames ?? 1) * 100)
+            .toStringAsFixed(0)
+        : null;
+
+    // Build detail rows
+    final detailRows = <_InfoRowData>[];
+    if (req.footballType != null) {
+      detailRows.add(_InfoRowData(
+        icon: Icons.sports_soccer_rounded,
+        label: 'Modalidad',
+        value: 'Fútbol ${req.footballType}',
+      ));
+    }
+    if (req.country != null || req.state != null) {
+      final loc = [req.country, req.state]
+          .where((e) => e != null && e.isNotEmpty)
+          .join(', ');
+      if (loc.isNotEmpty) {
+        detailRows.add(_InfoRowData(
+          icon: Icons.location_on_rounded,
+          label: 'Ubicación',
+          value: loc,
+        ));
+      }
+    }
+    if (req.matchDate != null) {
+      final dayName = DateFormat('EEEE', 'es').format(req.matchDate!);
+      final formatted = DateFormat('dd/MM/yyyy').format(req.matchDate!);
+      final daysUntil = req.matchDate!.difference(DateTime.now()).inDays;
+      String timeHint = '';
+      if (daysUntil == 0) {
+        timeHint = ' · Hoy';
+      } else if (daysUntil == 1) {
+        timeHint = ' · Mañana';
+      } else if (daysUntil > 1 && daysUntil <= 7) {
+        timeHint = ' · En $daysUntil días';
+      }
+      detailRows.add(_InfoRowData(
+        icon: Icons.calendar_today_rounded,
+        label: 'Fecha del partido',
+        value:
+            '${dayName[0].toUpperCase()}${dayName.substring(1)} $formatted$timeHint',
+        valueColor: AppTheme.info,
+      ));
+    }
+    if (req.league != null && req.league!.isNotEmpty) {
+      detailRows.add(_InfoRowData(
+        icon: Icons.emoji_events_rounded,
+        label: 'Liga / Torneo',
+        value: req.league!,
+        valueColor: AppTheme.accentDark,
+      ));
+    }
+    if (req.fieldPrice != null) {
+      detailRows.add(_InfoRowData(
+        icon: Icons.monetization_on_rounded,
+        label: 'Precio de cancha',
+        value: '\$${req.fieldPrice!.toStringAsFixed(0)}',
+        valueColor: AppTheme.primary,
+      ));
+    }
+    if (req.fieldAddress != null && req.fieldAddress!.isNotEmpty) {
+      detailRows.add(_InfoRowData(
+        icon: Icons.stadium_rounded,
+        label: 'Dirección',
+        value: req.fieldAddress!,
+      ));
+    }
 
     return MouseRegion(
-      cursor: SystemMouseCursors.click,
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        curve: Curves.easeOut,
+        duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border(
-            left: BorderSide(color: _accentColor, width: 3),
-            right: BorderSide(
-                color: _hovered ? AppTheme.borderStrong : AppTheme.border),
-            top: BorderSide(
-                color: _hovered ? AppTheme.borderStrong : AppTheme.border),
-            bottom: BorderSide(
-                color: _hovered ? AppTheme.borderStrong : AppTheme.border),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _hovered ? AppTheme.primary : AppTheme.border,
+            width: _hovered ? 1.5 : 1,
           ),
-          boxShadow: _hovered ? AppTheme.shadowMd : AppTheme.shadowSm,
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => context.go(
-              AppRoutes.requestDetail.replaceFirst(':id', req.id),
+          boxShadow: [
+            BoxShadow(
+              color: _hovered
+                  ? AppTheme.primary.withOpacity(0.10)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: _hovered ? 20 : 8,
+              offset: Offset(0, _hovered ? 6 : 2),
             ),
-            splashColor: AppTheme.primary.withAlpha(6),
-            highlightColor: AppTheme.surfaceVariant,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Header ────────────────────────────────────────────────
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      AppAvatar(name: req.team?.name ?? '?', size: 40),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              req.team?.name ?? 'Equipo sin nombre',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 15,
-                                color: AppTheme.text,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            if (req.footballType != null) ...[
-                              const SizedBox(height: 1),
-                              Text(
-                                'Fútbol ${req.footballType}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppTheme.textMuted,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ],
+          ],
+        ),
+        child: InkWell(
+          onTap: () => context.go(
+            AppRoutes.requestDetail.replaceFirst(':id', req.id),
+          ),
+          borderRadius: BorderRadius.circular(16),
+          splashColor: AppTheme.primary.withAlpha(8),
+          highlightColor: AppTheme.surfaceVariant.withOpacity(0.5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Header Section ─────────────────────────────────────────
+              Container(
+                padding: const EdgeInsets.fromLTRB(20, 18, 16, 14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primaryFaint, Colors.white],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(15),
+                    topRight: Radius.circular(15),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.primary.withOpacity(0.3),
+                          width: 2,
                         ),
                       ),
-                      StatusBadge(status: req.status.name),
-                      if (isOwner) ...[
-                        const SizedBox(width: 4),
-                        _CardMenu(onDelete: () => _deleteRequest(context)),
-                      ],
-                    ],
-                  ),
-
-                  // ── Info chips ────────────────────────────────────────────
-                  const SizedBox(height: 14),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (req.country != null && req.country!.isNotEmpty)
-                        AppTag(
-                          label: req.country!,
-                          icon: Icons.location_on_rounded,
-                        ),
-                      if (req.state != null && req.state!.isNotEmpty)
-                        AppTag(
-                          label: req.state!,
-                          icon: Icons.map_outlined,
-                        ),
-                      if (req.matchDate != null)
-                        AppTag(
-                          label:
-                              DateFormat('dd/MM/yyyy').format(req.matchDate!),
-                          icon: Icons.calendar_today_rounded,
-                          color: AppTheme.info,
-                          bgColor: AppTheme.infoLight,
-                        ),
-                      if (req.league != null && req.league!.isNotEmpty)
-                        AppTag(
-                          label: req.league!,
-                          icon: Icons.emoji_events_rounded,
-                          color: AppTheme.accentDark,
-                          bgColor: AppTheme.accentLight,
-                        ),
-                    ],
-                  ),
-
-                  // ── Address ───────────────────────────────────────────────
-                  if (req.fieldAddress != null &&
-                      req.fieldAddress!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        const Icon(Icons.place_outlined,
-                            size: 12, color: AppTheme.textMuted),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            req.fieldAddress!,
+                      child: AppAvatar(
+                          name: team?.name ?? '?', size: 44),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            team?.name ?? 'Equipo sin nombre',
                             style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMuted,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              color: AppTheme.text,
+                              letterSpacing: -0.3,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              if (req.footballType != null) ...[
+                                Icon(Icons.sports_soccer_rounded,
+                                    size: 12, color: AppTheme.textMuted),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Fútbol ${req.footballType}',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppTheme.textMuted,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                              if (req.footballType != null &&
+                                  req.league != null) ...[
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6),
+                                  child: Text('·',
+                                      style: TextStyle(
+                                          color: AppTheme.textMuted,
+                                          fontSize: 12)),
+                                ),
+                              ],
+                              if (req.league != null &&
+                                  req.league!.isNotEmpty) ...[
+                                Icon(Icons.emoji_events_rounded,
+                                    size: 12, color: AppTheme.accentDark),
+                                const SizedBox(width: 3),
+                                Flexible(
+                                  child: Text(
+                                    req.league!,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.accentDark,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    StatusBadge(status: req.status.name),
+                    if (isOwner) ...[
+                      const SizedBox(width: 2),
+                      _CardMenu(onDelete: () => _deleteRequest(context)),
+                    ],
+                  ],
+                ),
+              ),
+
+              // ── Stats bar (only if team has stats) ─────────────────────
+              if (hasStats) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceVariant,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppTheme.border.withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        _MiniStat(
+                            label: 'PJ',
+                            value: '${team!.totalGames ?? 0}',
+                            color: AppTheme.textSec),
+                        _StatDot(),
+                        _MiniStat(
+                            label: 'PG',
+                            value: '${team.gamesWon ?? 0}',
+                            color: AppTheme.success),
+                        _StatDot(),
+                        _MiniStat(
+                            label: 'PE',
+                            value: '${team.gamesDrawn ?? 0}',
+                            color: AppTheme.warning),
+                        _StatDot(),
+                        _MiniStat(
+                            label: 'PP',
+                            value: '${team.gamesLost ?? 0}',
+                            color: AppTheme.error),
+                        const Spacer(),
+                        if (winPct != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(colors: [
+                                AppTheme.primary,
+                                AppTheme.primaryDark,
+                              ]),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              '$winPct% victorias',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+
+              // ── Detail rows ────────────────────────────────────────────
+              if (detailRows.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          size: 13, color: AppTheme.textMuted),
+                      const SizedBox(width: 5),
+                      const Text(
+                        'DETALLES DEL PARTIDO',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textMuted,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppTheme.surfaceVariant.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                          color: AppTheme.border.withOpacity(0.4)),
+                    ),
+                    child: Column(
+                      children: [
+                        for (int i = 0; i < detailRows.length; i++) ...[
+                          _buildInfoRow(detailRows[i]),
+                          if (i < detailRows.length - 1)
+                            Divider(
+                              height: 1,
+                              color: AppTheme.border.withOpacity(0.4),
+                              indent: 40,
+                              endIndent: 12,
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              // ── Description ────────────────────────────────────────────
+              if (req.description != null &&
+                  req.description!.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                          color: AppTheme.accent.withOpacity(0.15)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('💬',
+                            style: TextStyle(fontSize: 14)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Mensaje del equipo',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.accentDark,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                req.description!,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppTheme.textSec,
+                                  height: 1.4,
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                ),
+              ],
 
-                  // ── Match action ──────────────────────────────────────────
-                  if (widget.mode == 'available' &&
-                      req.status == RequestStatus.active) ...[
-                    const SizedBox(height: 16),
-                    Divider(height: 1, color: AppTheme.border),
-                    const SizedBox(height: 14),
-                    _MatchButton(requestId: req.id),
-                  ],
-                ],
+              const SizedBox(height: 14),
+
+              // ── Footer action ──────────────────────────────────────────
+              if (widget.mode == 'available' &&
+                  req.status == RequestStatus.active) ...[
+                Container(
+                  decoration: BoxDecoration(
+                    border:
+                        Border(top: BorderSide(color: AppTheme.border)),
+                    color: _hovered
+                        ? AppTheme.primary.withOpacity(0.03)
+                        : Colors.transparent,
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(16),
+                      bottomRight: Radius.circular(16),
+                    ),
+                  ),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
+                  child: _MatchButton(requestId: req.id),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(_InfoRowData data) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: Row(
+        children: [
+          Icon(data.icon, size: 16, color: data.valueColor ?? AppTheme.textMuted),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 130,
+            child: Text(
+              data.label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.textMuted,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),
-        ),
+          Expanded(
+            child: Text(
+              data.value,
+              style: TextStyle(
+                fontSize: 13,
+                color: data.valueColor ?? AppTheme.text,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -551,6 +827,61 @@ class _RequestCardState extends ConsumerState<_RequestCard> {
       ref.invalidate(requestsProvider);
       if (context.mounted) showAppToast(context, 'Solicitud eliminada');
     }
+  }
+}
+
+// ─── Data classes & mini widgets ──────────────────────────────────────────────
+
+class _InfoRowData {
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+  const _InfoRowData({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+}
+
+class _MiniStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  const _MiniStat(
+      {required this.label, required this.value, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(value,
+            style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: color)),
+        const SizedBox(height: 1),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 9,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textMuted,
+                letterSpacing: 0.3)),
+      ],
+    );
+  }
+}
+
+class _StatDot extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 24,
+      margin: const EdgeInsets.symmetric(horizontal: 10),
+      color: AppTheme.border,
+    );
   }
 }
 
