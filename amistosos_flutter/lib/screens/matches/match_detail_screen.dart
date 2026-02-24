@@ -232,6 +232,18 @@ class _MatchDetailScreenState extends ConsumerState<MatchDetailScreen> {
                                 label: 'CANCHA',
                                 value: match.matchRequest!.fieldAddress!,
                               ),
+                            if (match.team1?.league != null && match.team1!.league!.isNotEmpty)
+                              _InfoRow(
+                                icon: Icons.emoji_events_outlined,
+                                label: 'LIGA LOCAL',
+                                value: match.team1!.league!,
+                              ),
+                            if (match.team2?.league != null && match.team2!.league!.isNotEmpty)
+                              _InfoRow(
+                                icon: Icons.emoji_events_outlined,
+                                label: 'LIGA VISITANTE',
+                                value: match.team2!.league!,
+                              ),
                           ],
                         ),
                       ),

@@ -512,6 +512,12 @@ class _MetaRow extends StatelessWidget {
       items.add(_MetaChip(icon: Icons.place_outlined, label: address, color: AppTheme.textMuted, maxWidth: 180));
     }
 
+    // Show league from either team
+    final league = match.team1?.league ?? match.team2?.league;
+    if (league != null && league.isNotEmpty) {
+      items.add(_MetaChip(icon: Icons.emoji_events_outlined, label: league, color: AppTheme.accent));
+    }
+
     if (items.isEmpty) return const SizedBox.shrink();
     return Wrap(spacing: 6, runSpacing: 6, children: items);
   }

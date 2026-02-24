@@ -53,19 +53,21 @@ class TeamSnapshot extends Equatable {
   final String id;
   final String name;
   final String? instagram;
+  final String? league;
 
-  const TeamSnapshot({required this.id, required this.name, this.instagram});
+  const TeamSnapshot({required this.id, required this.name, this.instagram, this.league});
 
   factory TeamSnapshot.fromJson(Map<String, dynamic> json) {
     return TeamSnapshot(
       id: json['id'] as String,
       name: json['name'] as String,
       instagram: json['instagram'] as String?,
+      league: json['league'] as String?,
     );
   }
 
   @override
-  List<Object?> get props => [id, name, instagram];
+  List<Object?> get props => [id, name, instagram, league];
 }
 
 class UserSnapshot extends Equatable {
