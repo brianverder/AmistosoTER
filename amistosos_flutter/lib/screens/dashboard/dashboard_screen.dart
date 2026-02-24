@@ -174,7 +174,7 @@ class _StatsSection extends ConsumerWidget {
             onTap: () => ctx.go('/dashboard/teams'),
           ),
           StatCard(
-            label: 'Solicitudes',
+            label: 'Amistosos',
             value: requestsCount.toString(),
             emoji: '📋',
             onTap: () => ctx.go('/dashboard/requests'),
@@ -314,9 +314,19 @@ class _ActiveMatchesSection extends ConsumerWidget {
         const SizedBox(height: 12),
         matchesAsync.when(
           loading: () => const AppSkeletonList(count: 3),
-          error: (_, __) => const AppCallout(
-            message: 'No se pudieron cargar los matches.',
-            type: AppCalloutType.error,
+          error: (_, __) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const AppCallout(
+                message: 'No se pudieron cargar los matches.',
+                type: AppCalloutType.error,
+              ),
+              TextButton.icon(
+                onPressed: () => ref.invalidate(matchesNotifierProvider),
+                icon: const Icon(Icons.refresh, size: 16),
+                label: const Text('Reintentar'),
+              ),
+            ],
           ),
           data: (matches) {
             final active = matches.where((m) => m.matchResult == null).take(3).toList();

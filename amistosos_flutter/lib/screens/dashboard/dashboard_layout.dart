@@ -117,7 +117,7 @@ class _SideNav extends StatelessWidget {
               children: [
                 _NavItem(icon: Icons.grid_view_rounded, label: 'Dashboard', path: '/dashboard', currentPath: currentPath),
                 _NavItem(icon: Icons.groups_rounded, label: 'Mis Equipos', path: '/dashboard/teams', currentPath: currentPath),
-                _NavItem(icon: Icons.assignment_rounded, label: 'Solicitudes', path: '/dashboard/requests', currentPath: currentPath),
+                _NavItem(icon: Icons.assignment_rounded, label: 'Amistosos', path: '/dashboard/requests', currentPath: currentPath),
                 _NavItem(icon: Icons.handshake_rounded, label: 'Mis Partidos', path: '/dashboard/matches', currentPath: currentPath),
                 const SizedBox(height: 8),
                 Padding(
@@ -366,7 +366,7 @@ class _BottomNav extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.assignment_outlined, color: AppTheme.textMuted),
             selectedIcon: Icon(Icons.assignment_rounded, color: AppTheme.primary),
-            label: 'Solicitudes',
+            label: 'Amistosos',
           ),
           NavigationDestination(
             icon: Icon(Icons.handshake_outlined, color: AppTheme.textMuted),

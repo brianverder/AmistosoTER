@@ -7,6 +7,7 @@ import '../../core/constants.dart';
 import '../../core/theme.dart';
 import '../../models/match_request_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/matches_provider.dart';
 import '../../providers/requests_provider.dart';
 import '../../providers/teams_provider.dart';
 import '../../widgets/app_widgets.dart';
@@ -481,6 +482,7 @@ class _MatchActionState extends ConsumerState<_MatchAction> {
       final matchData = await service.matchRequest(widget.requestId, teamId);
       ref.invalidate(requestsProvider);
       ref.invalidate(requestDetailProvider);
+      ref.invalidate(matchesNotifierProvider);
       if (mounted) {
         await _showContactModal(context, matchData);
         if (mounted) context.go(AppRoutes.matches);

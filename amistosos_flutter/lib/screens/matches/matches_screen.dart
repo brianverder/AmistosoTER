@@ -22,6 +22,15 @@ class _MatchesScreenState extends ConsumerState<MatchesScreen> {
   _Filter _filter = _Filter.all;
 
   @override
+  void initState() {
+    super.initState();
+    // Refresh on every navigation to this screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.invalidate(matchesNotifierProvider);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final matchesAsync = ref.watch(matchesNotifierProvider);
 
