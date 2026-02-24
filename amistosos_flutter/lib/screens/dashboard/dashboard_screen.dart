@@ -772,10 +772,10 @@ class _GlobalRankingPanel extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Ranking global de la plataforma',
+                'Equipos con más partidos ganados en la plataforma',
                 style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 11,
+                  color: Colors.white.withOpacity(0.85),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -851,15 +851,33 @@ class _GlobalRankingPanel extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            team.name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: pos == 1 ? FontWeight.w700 : FontWeight.w600,
-                              color: AppTheme.text,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                team.name,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: pos == 1 ? FontWeight.w700 : FontWeight.w600,
+                                  color: AppTheme.text,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (team.league != null && team.league!.isNotEmpty)
+                                const SizedBox(height: 2),
+                              if (team.league != null && team.league!.isNotEmpty)
+                                Text(
+                                  team.league!,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppTheme.textMuted,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -871,15 +889,28 @@ class _GlobalRankingPanel extends ConsumerWidget {
                                 : AppTheme.surfaceVariant,
                             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                           ),
-                          child: Text(
-                            '${team.gamesWon}V',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: pos == 1
-                                  ? AppTheme.primaryDark
-                                  : AppTheme.textSec,
-                            ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.emoji_events_rounded,
+                                size: 12,
+                                color: pos == 1
+                                    ? AppTheme.primaryDark
+                                    : AppTheme.textSec,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${team.gamesWon}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: pos == 1
+                                      ? AppTheme.primaryDark
+                                      : AppTheme.textSec,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

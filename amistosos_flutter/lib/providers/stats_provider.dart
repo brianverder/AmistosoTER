@@ -9,12 +9,14 @@ import 'auth_provider.dart';
 class TopTeamEntry {
   final String id;
   final String name;
+  final String? league;
   final int gamesWon;
   final int totalGames;
 
   const TopTeamEntry({
     required this.id,
     required this.name,
+    this.league,
     required this.gamesWon,
     required this.totalGames,
   });
@@ -22,6 +24,7 @@ class TopTeamEntry {
   factory TopTeamEntry.fromJson(Map<String, dynamic> json) => TopTeamEntry(
         id: json['id'] as String,
         name: json['name'] as String,
+        league: json['league'] as String?,
         gamesWon: (json['gamesWon'] as num).toInt(),
         totalGames: (json['totalGames'] as num? ?? 0).toInt(),
       );

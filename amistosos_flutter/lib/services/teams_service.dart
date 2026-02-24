@@ -26,12 +26,14 @@ class TeamsService {
   Future<TeamModel> createTeam({
     required String name,
     String? instagram,
+    String? league,
   }) async {
     final data = await _client.post(
       AppConstants.teamsEndpoint,
       data: {
         'name': name,
         if (instagram != null && instagram.isNotEmpty) 'instagram': instagram,
+        if (league != null && league.isNotEmpty) 'league': league,
       },
     ) as Map<String, dynamic>;
     return TeamModel.fromJson(data);

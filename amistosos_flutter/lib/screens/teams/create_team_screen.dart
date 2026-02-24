@@ -17,6 +17,7 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _instagramCtrl = TextEditingController();
+  final _leagueCtrl = TextEditingController();
   bool _loading = false;
   String? _error;
 
@@ -24,6 +25,7 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
   void dispose() {
     _nameCtrl.dispose();
     _instagramCtrl.dispose();
+    _leagueCtrl.dispose();
     super.dispose();
   }
 
@@ -40,6 +42,9 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
             instagram: _instagramCtrl.text.trim().isEmpty
                 ? null
                 : _instagramCtrl.text.trim(),
+            league: _leagueCtrl.text.trim().isEmpty
+                ? null
+                : _leagueCtrl.text.trim(),
           );
       if (mounted) {
         showAppToast(context, 'Equipo creado exitosamente');
@@ -122,6 +127,14 @@ class _CreateTeamScreenState extends ConsumerState<CreateTeamScreen> {
                       hintText: 'usuario (sin @)',
                       prefixIcon:
                           const Icon(Icons.alternate_email, size: 18),
+                    ),
+                    const SizedBox(height: 16),
+                    AppTextField(
+                      label: 'Liga / Torneo (opcional)',
+                      controller: _leagueCtrl,
+                      hintText: 'Ej: Liga Regional, Torneo Apertura',
+                      prefixIcon:
+                          const Icon(Icons.emoji_events_outlined, size: 18),
                     ),
                     const SizedBox(height: 28),
                     SizedBox(

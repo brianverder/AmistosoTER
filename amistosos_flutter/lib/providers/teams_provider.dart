@@ -34,11 +34,13 @@ class TeamsNotifier extends AsyncNotifier<List<TeamModel>> {
   Future<TeamModel?> createTeam({
     required String name,
     String? instagram,
+    String? league,
   }) async {
     try {
       final team = await ref.read(teamsServiceProvider).createTeam(
             name: name,
             instagram: instagram,
+            league: league,
           );
       state = AsyncData([...(state.valueOrNull ?? []), team]);
       return team;

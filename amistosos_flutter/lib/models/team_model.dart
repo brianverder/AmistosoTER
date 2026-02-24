@@ -4,6 +4,7 @@ class TeamModel extends Equatable {
   final String id;
   final String name;
   final String? instagram;
+  final String? league;
   final String userId;
   final int gamesWon;
   final int gamesLost;
@@ -16,6 +17,7 @@ class TeamModel extends Equatable {
     required this.id,
     required this.name,
     this.instagram,
+    this.league,
     required this.userId,
     this.gamesWon = 0,
     this.gamesLost = 0,
@@ -30,6 +32,7 @@ class TeamModel extends Equatable {
       id: json['id'] as String,
       name: json['name'] as String,
       instagram: json['instagram'] as String?,
+      league: json['league'] as String?,
       userId: json['userId'] as String,
       gamesWon: (json['gamesWon'] as num?)?.toInt() ?? 0,
       gamesLost: (json['gamesLost'] as num?)?.toInt() ?? 0,
@@ -48,6 +51,7 @@ class TeamModel extends Equatable {
         'id': id,
         'name': name,
         'instagram': instagram,
+        'league': league,
         'userId': userId,
         'gamesWon': gamesWon,
         'gamesLost': gamesLost,
@@ -67,6 +71,7 @@ class TeamModel extends Equatable {
     String? id,
     String? name,
     String? instagram,
+    String? league,
     String? userId,
     int? gamesWon,
     int? gamesLost,
@@ -79,6 +84,7 @@ class TeamModel extends Equatable {
       id: id ?? this.id,
       name: name ?? this.name,
       instagram: instagram ?? this.instagram,
+      league: league ?? this.league,
       userId: userId ?? this.userId,
       gamesWon: gamesWon ?? this.gamesWon,
       gamesLost: gamesLost ?? this.gamesLost,
@@ -94,6 +100,7 @@ class TeamModel extends Equatable {
         id,
         name,
         instagram,
+        league,
         userId,
         gamesWon,
         gamesLost,

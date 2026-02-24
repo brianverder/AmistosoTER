@@ -21,6 +21,7 @@ export async function GET() {
       select: {
         id: true,
         name: true,
+        league: true,
         gamesWon: true,
         gamesLost: true,
         gamesDrawn: true,

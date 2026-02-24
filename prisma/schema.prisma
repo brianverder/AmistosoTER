@@ -44,6 +44,7 @@ model Team {
   id          String   @id @default(cuid()) @db.VarChar(36)
   name        String                        @db.VarChar(255)
   instagram   String?                       @db.VarChar(255)
+  league      String?                       @db.VarChar(100)
   userId      String                        @db.VarChar(36)
   country     String?                       @db.VarChar(50)
   state       String?                       @db.VarChar(100)

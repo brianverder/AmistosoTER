@@ -390,13 +390,66 @@ class _RequestCardState extends State<_RequestCard> {
     final req = widget.request;
     final team = req.team;
     final hasStats = team != null && (team.totalGames ?? 0) > 0;
+    final winPct = hasStats
+        ? ((team!.gamesWon ?? 0) / (team.totalGames ?? 1) * 100).toStringAsFixed(0)
+        : null;
+
+    // Gather detail rows
+    final detailRows = <Widget>[];
+    if (req.footballType != null) {
+      detailRows.add(_DetailRow(
+        emoji: '⚽',
+        label: 'Modalidad',
+        value: 'Fútbol ${req.footballType}',
+      ));
+    }
+    if (req.country != null || req.state != null) {
+      final location = [req.country, req.state].where((e) => e != null).join(', ');
+      detailRows.add(_DetailRow(
+        emoji: '📍',
+        label: 'Ubicación',
+        value: location,
+      ));
+    }
+    if (req.matchDate != null) {
+      final dayName = DateFormat('EEEE', 'es').format(req.matchDate!);
+      final formatted = DateFormat('dd/MM/yyyy').format(req.matchDate!);
+      detailRows.add(_DetailRow(
+        emoji: '📅',
+        label: 'Fecha del partido',
+        value: '${dayName[0].toUpperCase()}${dayName.substring(1)} $formatted',
+      ));
+    }
+    if (req.league != null) {
+      detailRows.add(_DetailRow(
+        emoji: '🏆',
+        label: 'Liga / Torneo',
+        value: req.league!,
+        valueColor: AppTheme.accentDark,
+      ));
+    }
+    if (req.fieldPrice != null) {
+      detailRows.add(_DetailRow(
+        emoji: '💰',
+        label: 'Precio de cancha',
+        value: '\$${req.fieldPrice!.toStringAsFixed(0)}',
+        valueColor: AppTheme.primary,
+      ));
+    }
+    if (req.fieldAddress != null && req.fieldAddress!.isNotEmpty) {
+      detailRows.add(_DetailRow(
+        emoji: '🏟️',
+        label: 'Dirección',
+        value: req.fieldAddress!,
+      ));
+    }
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       cursor: SystemMouseCursors.click,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -404,152 +457,255 @@ class _RequestCardState extends State<_RequestCard> {
             color: _hovered ? AppTheme.primary : AppTheme.border,
             width: _hovered ? 1.5 : 1,
           ),
-          boxShadow: _hovered
-              ? [
-                  BoxShadow(
-                    color: AppTheme.primary.withOpacity(0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          boxShadow: [
+            BoxShadow(
+              color: _hovered
+                  ? AppTheme.primary.withOpacity(0.10)
+                  : Colors.black.withOpacity(0.04),
+              blurRadius: _hovered ? 20 : 8,
+              offset: Offset(0, _hovered ? 6 : 2),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // ── HEADER: Team + Status ────────────────────────────────
+            Container(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 14),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppTheme.primaryFaint,
+                    Colors.white,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(15),
+                  topRight: Radius.circular(15),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // Header row: avatar + team name + status
-                  Row(
+                  // Team avatar with subtle ring
+                  Container(
+                    padding: const EdgeInsets.all(2.5),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppTheme.primary.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: AppAvatar(name: team?.name ?? '?', size: 44),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          team?.name ?? 'Equipo',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                            color: AppTheme.text,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          req.footballType != null
+                              ? 'Fútbol ${req.footballType}  ·  Busca rival'
+                              : 'Busca rival para amistoso',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textMuted,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  StatusBadge(status: req.status.name),
+                ],
+              ),
+            ),
+
+            // ── STATS BAR ─────────────────────────────────────────────
+            if (hasStats) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border.withOpacity(0.5)),
+                  ),
+                  child: Row(
+                    children: [
+                      _StatChip(
+                        label: 'Jugados',
+                        value: '${team!.totalGames ?? 0}',
+                        color: AppTheme.textSec,
+                      ),
+                      _StatSep(),
+                      _StatChip(
+                        label: 'Ganados',
+                        value: '${team.gamesWon ?? 0}',
+                        color: AppTheme.success,
+                      ),
+                      _StatSep(),
+                      _StatChip(
+                        label: 'Empates',
+                        value: '${team.gamesDrawn ?? 0}',
+                        color: AppTheme.warning,
+                      ),
+                      _StatSep(),
+                      _StatChip(
+                        label: 'Perdidos',
+                        value: '${team.gamesLost ?? 0}',
+                        color: AppTheme.error,
+                      ),
+                      const Spacer(),
+                      if (winPct != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primary,
+                                AppTheme.primaryDark,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '$winPct% victorias',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
+
+            // ── MATCH DETAILS ────────────────────────────────────────
+            if (detailRows.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_outline_rounded, size: 13, color: AppTheme.textMuted),
+                    const SizedBox(width: 5),
+                    Text(
+                      'DETALLES DEL PARTIDO',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textMuted,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceVariant.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppTheme.border.withOpacity(0.4)),
+                  ),
+                  child: Column(
+                    children: [
+                      for (int i = 0; i < detailRows.length; i++) ...[
+                        detailRows[i],
+                        if (i < detailRows.length - 1)
+                          Divider(height: 1, color: AppTheme.border.withOpacity(0.4),
+                              indent: 40, endIndent: 12),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+
+            // ── DESCRIPTION ──────────────────────────────────────────
+            if (req.description != null && req.description!.isNotEmpty) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB), // warm yellow tint
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.accent.withOpacity(0.15)),
+                  ),
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AppAvatar(name: team?.name ?? '?', size: 48),
-                      const SizedBox(width: 12),
+                      Text('💬', style: TextStyle(fontSize: 14)),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(children: [
-                              Expanded(
-                                child: Text(
-                                  team?.name ?? 'Equipo',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 16,
-                                    color: AppTheme.text,
-                                    letterSpacing: -0.3,
-                                  ),
-                                ),
+                            Text(
+                              'Mensaje del equipo',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.accentDark,
+                                letterSpacing: 0.5,
                               ),
-                              StatusBadge(status: req.status.name),
-                            ]),
-                            if (req.footballType != null) ...[
-                              const SizedBox(height: 3),
-                              Text(
-                                'Fútbol ${req.footballType}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppTheme.textMuted,
-                                  fontWeight: FontWeight.w500,
-                                ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              req.description!,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textSec,
+                                height: 1.4,
                               ),
-                            ],
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
                         ),
                       ),
                     ],
                   ),
-
-                  // Stats row
-                  if (hasStats) ...[
-                    const SizedBox(height: 12),
-                    _StatsRow(team: team!),
-                  ],
-
-                  const SizedBox(height: 12),
-
-                  // Tags
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (req.country != null)
-                        _InfoTag(icon: Icons.location_on_rounded, label: req.country!, color: AppTheme.info),
-                      if (req.state != null)
-                        _InfoTag(icon: Icons.map_outlined, label: req.state!),
-                      if (req.matchDate != null)
-                        _InfoTag(
-                          icon: Icons.calendar_today_rounded,
-                          label: DateFormat('dd/MM/yyyy').format(req.matchDate!),
-                          color: AppTheme.primary,
-                        ),
-                      if (req.league != null)
-                        _InfoTag(
-                          icon: Icons.emoji_events_rounded,
-                          label: req.league!,
-                          color: const Color(0xFFD97706),
-                        ),
-                      if (req.fieldPrice != null)
-                        _InfoTag(
-                          icon: Icons.payments_outlined,
-                          label: '\$${req.fieldPrice!.toStringAsFixed(0)} cancha',
-                          color: const Color(0xFF059669),
-                        ),
-                    ],
-                  ),
-
-                  // Address
-                  if (req.fieldAddress != null) ...[
-                    const SizedBox(height: 10),
-                    Row(children: [
-                      const Icon(Icons.place_outlined, size: 13, color: AppTheme.textMuted),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          req.fieldAddress!,
-                          style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ]),
-                  ],
-
-                  // Description
-                  if (req.description != null && req.description!.isNotEmpty) ...[
-                    const SizedBox(height: 10),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceVariant,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        req.description!,
-                        style: const TextStyle(fontSize: 12, color: AppTheme.textSec, height: 1.5),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
+            ],
 
-            // CTA footer
+            const SizedBox(height: 14),
+
+            // ── CTA FOOTER ───────────────────────────────────────────
             Container(
               decoration: BoxDecoration(
                 border: Border(top: BorderSide(color: AppTheme.border)),
+                color: _hovered
+                    ? AppTheme.primary.withOpacity(0.04)
+                    : Colors.transparent,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(16),
+                  bottomRight: Radius.circular(16),
+                ),
               ),
               child: Material(
                 color: Colors.transparent,
@@ -560,28 +716,28 @@ class _RequestCardState extends State<_RequestCard> {
                     bottomRight: Radius.circular(16),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.lock_open_rounded,
-                          size: 14,
+                          size: 15,
                           color: _hovered ? AppTheme.primary : AppTheme.textMuted,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 8),
                         Text(
                           'Inicia sesión para aceptar este partido',
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: _hovered ? AppTheme.primary : AppTheme.textMuted,
                           ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Icon(
                           Icons.arrow_forward_rounded,
-                          size: 13,
+                          size: 14,
                           color: _hovered ? AppTheme.primary : AppTheme.textMuted,
                         ),
                       ],
@@ -597,98 +753,101 @@ class _RequestCardState extends State<_RequestCard> {
   }
 }
 
-// ─── Stats row ────────────────────────────────────────────────────────────────
+// ─── Detail row (emoji + label + value) ──────────────────────────────────────
 
-class _StatsRow extends StatelessWidget {
-  final TeamPreview team;
-  const _StatsRow({required this.team});
+class _DetailRow extends StatelessWidget {
+  final String emoji;
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _DetailRow({
+    required this.emoji,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final winPct = (team.totalGames ?? 0) > 0
-        ? ((team.gamesWon ?? 0) / (team.totalGames ?? 1) * 100).toStringAsFixed(0)
-        : null;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(children: [
-        _StatItem(label: 'PJ', value: '${team.totalGames ?? 0}', color: AppTheme.textSec),
-        const _StatDivider(),
-        _StatItem(label: 'G', value: '${team.gamesWon ?? 0}', color: AppTheme.success),
-        const _StatDivider(),
-        _StatItem(label: 'E', value: '${team.gamesDrawn ?? 0}', color: AppTheme.textMuted),
-        const _StatDivider(),
-        _StatItem(label: 'P', value: '${team.gamesLost ?? 0}', color: AppTheme.error),
-        const Spacer(),
-        if (winPct != null)
-          Text(
-            '$winPct% victorias',
-            style: const TextStyle(fontSize: 11, color: AppTheme.textMuted, fontWeight: FontWeight.w500),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 15)),
+          const SizedBox(width: 10),
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 12,
+                color: AppTheme.textMuted,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
-      ]),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13,
+                color: valueColor ?? AppTheme.text,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _StatItem extends StatelessWidget {
-  final String label, value;
+// ─── Stat chip (for the stats bar) ───────────────────────────────────────────
+
+class _StatChip extends StatelessWidget {
+  final String label;
+  final String value;
   final Color color;
-  const _StatItem({required this.label, required this.value, required this.color});
+  const _StatChip({required this.label, required this.value, required this.color});
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: color)),
-      Text(label, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: AppTheme.textMuted, letterSpacing: 0.5)),
-    ]);
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+            color: color,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textMuted,
+            letterSpacing: 0.3,
+          ),
+        ),
+      ],
+    );
   }
 }
 
-class _StatDivider extends StatelessWidget {
-  const _StatDivider();
-
+class _StatSep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
       width: 1,
-      height: 24,
-      margin: const EdgeInsets.symmetric(horizontal: 10),
+      height: 26,
+      margin: const EdgeInsets.symmetric(horizontal: 12),
       color: AppTheme.border,
-    );
-  }
-}
-
-// ─── Info tag ─────────────────────────────────────────────────────────────────
-
-class _InfoTag extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color? color;
-
-  const _InfoTag({required this.icon, required this.label, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = color ?? AppTheme.textMuted;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: c.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: c.withOpacity(0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: c),
-          const SizedBox(width: 4),
-          Text(label, style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.w600)),
-        ],
-      ),
     );
   }
 }
