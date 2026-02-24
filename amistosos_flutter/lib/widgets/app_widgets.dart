@@ -1,31 +1,40 @@
 import 'package:flutter/material.dart';
 import '../core/theme.dart';
 
+/// ──────────────────────────────────────────────────────────────────────────
+/// Tercer Tiempo — Component Library 2026
+/// Inspirado en: Stripe · Linear · Vercel · Notion
+/// ──────────────────────────────────────────────────────────────────────────
+
+export 'skeleton.dart';
+
 enum AppToastType { success, error, info, warning }
 
-// ─── Spinner ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SPINNER
+// ─────────────────────────────────────────────────────────────────────────────
 
 class AppSpinner extends StatelessWidget {
   final double size;
   final Color? color;
 
-  const AppSpinner({super.key, this.size = 24, this.color});
+  const AppSpinner({super.key, this.size = 22, this.color});
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: CircularProgressIndicator(
-        strokeWidth: 2.5,
-        color: color ?? AppTheme.primary,
-        strokeCap: StrokeCap.round,
-      ),
-    );
-  }
+  Widget build(BuildContext context) => SizedBox(
+        width: size,
+        height: size,
+        child: CircularProgressIndicator(
+          strokeWidth: 2.0,
+          color: color ?? AppTheme.primary,
+          strokeCap: StrokeCap.round,
+        ),
+      );
 }
 
-// ─── Loading Screen ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// LOADING SCREEN
+// ─────────────────────────────────────────────────────────────────────────────
 
 class AppLoadingScreen extends StatelessWidget {
   final String? message;
@@ -39,20 +48,10 @@ class AppLoadingScreen extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryFaint,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            ),
-            child: const AppSpinner(size: 32),
-          ),
+          const AppSpinner(size: 28),
           if (message != null) ...[
-            const SizedBox(height: 20),
-            Text(
-              message!,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            const SizedBox(height: 16),
+            Text(message!, style: Theme.of(context).textTheme.bodyMedium),
           ],
         ],
       ),
@@ -60,7 +59,9 @@ class AppLoadingScreen extends StatelessWidget {
   }
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// EMPTY STATE
+// ─────────────────────────────────────────────────────────────────────────────
 
 class EmptyState extends StatelessWidget {
   final String? emoji;
@@ -82,53 +83,65 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceVariant,
-                shape: BoxShape.circle,
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 320),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                ),
+                child: icon != null
+                    ? Icon(icon, size: 32, color: AppTheme.textMuted)
+                    : Center(
+                        child: Text(
+                          emoji ?? '📭',
+                          style: const TextStyle(fontSize: 32),
+                        ),
+                      ),
               ),
-              child: icon != null
-                  ? Icon(icon, size: 40, color: AppTheme.textMuted)
-                  : Text(
-                      emoji ?? '📭',
-                      style: const TextStyle(fontSize: 40),
-                    ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (subtitle != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 20),
               Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.bodyMedium,
+                title,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.text,
+                    ),
                 textAlign: TextAlign.center,
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 6),
+                Text(
+                  subtitle!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.textMuted,
+                        height: 1.5,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (action != null) ...[
+                const SizedBox(height: 24),
+                action!,
+              ],
             ],
-            if (action != null) ...[
-              const SizedBox(height: 28),
-              action!,
-            ],
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ─── Stat Card ────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// STAT CARD
+// ─────────────────────────────────────────────────────────────────────────────
 
-class StatCard extends StatelessWidget {
+class StatCard extends StatefulWidget {
   final String? label;
   final String? title;
   final String value;
@@ -146,23 +159,37 @@ class StatCard extends StatelessWidget {
     this.accentColor,
   });
 
-  String get _label => label ?? title ?? '';
+  @override
+  State<StatCard> createState() => _StatCardState();
+}
+
+class _StatCardState extends State<StatCard> {
+  bool _hovered = false;
+
+  String get _label => widget.label ?? widget.title ?? '';
 
   @override
   Widget build(BuildContext context) {
-    final color = accentColor ?? AppTheme.primary;
-    return GestureDetector(
-      onTap: onTap,
-      child: MouseRegion(
-        cursor: onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+    final color = widget.accentColor ?? AppTheme.primary;
+
+    return MouseRegion(
+      cursor: widget.onTap != null ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            border: Border.all(color: AppTheme.border, width: 1),
-            boxShadow: AppTheme.shadowSm,
+            border: Border.all(
+              color: _hovered ? AppTheme.borderStrong : AppTheme.border,
+              width: 1,
+            ),
+            boxShadow: _hovered ? AppTheme.shadowMd : AppTheme.shadowSm,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,24 +198,34 @@ class StatCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      color: color.withAlpha(18),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(emoji, style: const TextStyle(fontSize: 22)),
+                    child: Center(
+                      child: Text(widget.emoji, style: const TextStyle(fontSize: 20)),
+                    ),
                   ),
-                  if (onTap != null)
-                    Icon(Icons.arrow_forward_ios, size: 14, color: AppTheme.textMuted),
+                  if (widget.onTap != null)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 160),
+                      transform: _hovered
+                          ? Matrix4.translationValues(2, 0, 0)
+                          : Matrix4.identity(),
+                      child: Icon(Icons.arrow_forward_ios, size: 12, color: AppTheme.textMuted),
+                    ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 16),
               Text(
-                value,
+                widget.value,
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: AppTheme.text,
                       height: 1,
+                      letterSpacing: -0.5,
                     ),
               ),
               const SizedBox(height: 4),
@@ -207,7 +244,9 @@ class StatCard extends StatelessWidget {
   }
 }
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// STATUS BADGE
+// ─────────────────────────────────────────────────────────────────────────────
 
 class StatusBadge extends StatelessWidget {
   final String status;
@@ -229,18 +268,16 @@ class StatusBadge extends StatelessWidget {
           Container(
             width: 6,
             height: 6,
-            decoration: BoxDecoration(
-              color: config.dotColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: config.dotColor, shape: BoxShape.circle),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 5),
           Text(
             config.label,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
               color: config.textColor,
+              letterSpacing: 0.1,
             ),
           ),
         ],
@@ -310,7 +347,9 @@ class _StatusConfig {
   });
 }
 
-// ─── Confirm Dialog ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CONFIRM DIALOG
+// ─────────────────────────────────────────────────────────────────────────────
 
 Future<bool> showConfirmDialog({
   required BuildContext context,
@@ -330,12 +369,13 @@ Future<bool> showConfirmDialog({
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusXl),
       ),
-      contentPadding: const EdgeInsets.fromLTRB(28, 24, 28, 0),
+      contentPadding: const EdgeInsets.fromLTRB(28, 12, 28, 0),
       titlePadding: const EdgeInsets.fromLTRB(28, 28, 28, 0),
       title: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: dangerous ? AppTheme.errorLight : AppTheme.primaryLight,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -343,7 +383,7 @@ Future<bool> showConfirmDialog({
             child: Icon(
               dangerous ? Icons.warning_amber_rounded : Icons.help_outline_rounded,
               color: dangerous ? AppTheme.error : AppTheme.primary,
-              size: 20,
+              size: 18,
             ),
           ),
           const SizedBox(width: 12),
@@ -352,10 +392,7 @@ Future<bool> showConfirmDialog({
       ),
       content: Padding(
         padding: const EdgeInsets.only(top: 12, bottom: 8),
-        child: Text(
-          message,
-          style: Theme.of(ctx).textTheme.bodyMedium,
-        ),
+        child: Text(message, style: Theme.of(ctx).textTheme.bodyMedium),
       ),
       actionsPadding: const EdgeInsets.all(20),
       actions: [
@@ -368,6 +405,7 @@ Future<bool> showConfirmDialog({
           onPressed: () => Navigator.of(ctx).pop(true),
           style: ElevatedButton.styleFrom(
             backgroundColor: dangerous ? AppTheme.error : AppTheme.primary,
+            foregroundColor: AppTheme.surface,
           ),
           child: Text(confirmLabel ?? confirmText),
         ),
@@ -377,7 +415,9 @@ Future<bool> showConfirmDialog({
   return result ?? false;
 }
 
-// ─── Toast ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────────────────────────────────────
 
 void showAppToast(
   BuildContext context,
@@ -386,59 +426,66 @@ void showAppToast(
 }) {
   final config = switch (type) {
     AppToastType.success => (
-        bg: AppTheme.primary,
+        accent: AppTheme.success,
         icon: Icons.check_circle_rounded,
-        text: AppTheme.surface,
       ),
     AppToastType.error => (
-        bg: AppTheme.error,
+        accent: AppTheme.error,
         icon: Icons.error_rounded,
-        text: AppTheme.surface,
       ),
     AppToastType.warning => (
-        bg: AppTheme.warning,
+        accent: AppTheme.warning,
         icon: Icons.warning_rounded,
-        text: AppTheme.surface,
       ),
     AppToastType.info => (
-        bg: AppTheme.info,
+        accent: AppTheme.info,
         icon: Icons.info_rounded,
-        text: AppTheme.surface,
       ),
   };
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Row(
-        children: [
-          Icon(config.icon, color: config.text, size: 18),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                color: config.text,
-                fontWeight: FontWeight.w500,
-                fontSize: 14,
-              ),
-            ),
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C2E),
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border(left: BorderSide(color: config.accent, width: 3)),
           ),
-        ],
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(config.icon, color: config.accent, size: 18),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 13.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        duration: const Duration(seconds: 3),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        padding: EdgeInsets.zero,
       ),
-      backgroundColor: config.bg,
-      duration: const Duration(seconds: 3),
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      ),
-      margin: const EdgeInsets.all(16),
-    ),
-  );
+    );
 }
 
-// ─── Text Field ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TEXT FIELD
+// ─────────────────────────────────────────────────────────────────────────────
 
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   final String label;
   final TextEditingController? controller;
   final String? hintText;
@@ -451,6 +498,8 @@ class AppTextField extends StatelessWidget {
   final bool enabled;
   final void Function(String)? onChanged;
   final String? initialValue;
+  final String? helperText;
+  final FocusNode? focusNode;
 
   const AppTextField({
     super.key,
@@ -466,40 +515,77 @@ class AppTextField extends StatelessWidget {
     this.enabled = true,
     this.onChanged,
     this.initialValue,
+    this.helperText,
+    this.focusNode,
   });
+
+  @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  late FocusNode _focus;
+  bool _focused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus = widget.focusNode ?? FocusNode();
+    _focus.addListener(() {
+      if (mounted) setState(() => _focused = _focus.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    if (widget.focusNode == null) _focus.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (label.isNotEmpty) ...[
+        if (widget.label.isNotEmpty) ...[
           Text(
-            label,
+            widget.label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.textSec,
+                  color: _focused ? AppTheme.primary : AppTheme.textSec,
                 ),
           ),
           const SizedBox(height: 6),
         ],
-        TextFormField(
-          controller: controller,
-          initialValue: controller == null ? initialValue : null,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          validator: validator,
-          maxLines: maxLines,
-          enabled: enabled,
-          onChanged: onChanged,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.text,
-                fontWeight: FontWeight.w400,
-              ),
-          decoration: InputDecoration(
-            hintText: hintText,
-            suffixIcon: suffixIcon,
-            prefixIcon: prefixIcon,
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            boxShadow: _focused
+                ? [BoxShadow(color: AppTheme.primary.withAlpha(30), blurRadius: 0, spreadRadius: 3)]
+                : [],
+          ),
+          child: TextFormField(
+            controller: widget.controller,
+            initialValue: widget.controller == null ? widget.initialValue : null,
+            obscureText: widget.obscureText,
+            keyboardType: widget.keyboardType,
+            validator: widget.validator,
+            maxLines: widget.maxLines,
+            enabled: widget.enabled,
+            onChanged: widget.onChanged,
+            focusNode: _focus,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  color: AppTheme.text,
+                  fontWeight: FontWeight.w400,
+                ),
+            decoration: InputDecoration(
+              hintText: widget.hintText,
+              suffixIcon: widget.suffixIcon,
+              prefixIcon: widget.prefixIcon,
+              helperText: widget.helperText,
+              isDense: true,
+            ),
           ),
         ),
       ],
@@ -507,15 +593,19 @@ class AppTextField extends StatelessWidget {
   }
 }
 
-// ─── Button ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// BUTTON
+// Variantes: primary | outlined | ghost | danger
+// ─────────────────────────────────────────────────────────────────────────────
 
-class AppButton extends StatelessWidget {
+class AppButton extends StatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final bool loading;
   final bool isLoading;
   final bool outlined;
   final bool danger;
+  final bool ghost;
   final double? width;
   final EdgeInsets? padding;
   final IconData? icon;
@@ -528,81 +618,148 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.outlined = false,
     this.danger = false,
+    this.ghost = false,
     this.width,
     this.padding,
     this.icon,
   });
 
-  bool get _isLoading => loading || isLoading;
+  @override
+  State<AppButton> createState() => _AppButtonState();
+}
+
+class _AppButtonState extends State<AppButton> {
+  bool _hovered = false;
+
+  bool get _isLoading => widget.loading || widget.isLoading;
+  bool get _disabled => _isLoading || widget.onPressed == null;
+
+  Widget get _child {
+    if (_isLoading) {
+      return SizedBox(
+        width: 16,
+        height: 16,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          strokeCap: StrokeCap.round,
+          color: (widget.outlined || widget.ghost) ? AppTheme.primary : AppTheme.surface,
+        ),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (widget.icon != null) ...[
+          Icon(widget.icon, size: 15),
+          const SizedBox(width: 6),
+        ],
+        Text(widget.label),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final effectivePadding = padding ??
-        const EdgeInsets.symmetric(horizontal: 20, vertical: 13);
+    final effectivePadding =
+        widget.padding ?? const EdgeInsets.symmetric(horizontal: 18, vertical: 11);
 
-    final buttonChild = _isLoading
-        ? SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: outlined ? AppTheme.primary : AppTheme.surface,
-              strokeCap: StrokeCap.round,
+    if (widget.ghost) {
+      final btn = TextButton(
+        onPressed: _disabled ? null : widget.onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: widget.danger ? AppTheme.error : AppTheme.primary,
+          padding: effectivePadding,
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        child: _child,
+      );
+      return widget.width != null ? SizedBox(width: widget.width, child: btn) : btn;
+    }
+
+    if (widget.outlined) {
+      final btn = MouseRegion(
+        cursor: _disabled ? MouseCursor.defer : SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: OutlinedButton(
+          onPressed: _disabled ? null : widget.onPressed,
+          style: OutlinedButton.styleFrom(
+            padding: effectivePadding,
+            side: BorderSide(
+              color: widget.danger
+                  ? AppTheme.error
+                  : (_hovered ? AppTheme.borderStrong : AppTheme.border),
+              width: 1.5,
             ),
-          )
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 16),
-                const SizedBox(width: 6),
-              ],
-              Text(label),
-            ],
-          );
-
-    Widget button;
-    if (outlined) {
-      button = OutlinedButton(
-        onPressed: _isLoading ? null : onPressed,
-        style: OutlinedButton.styleFrom(
-          padding: effectivePadding,
-          side: BorderSide(
-            color: danger ? AppTheme.error : AppTheme.border,
-            width: 1.5,
+            foregroundColor: widget.danger ? AppTheme.error : AppTheme.text,
+            backgroundColor: _hovered ? AppTheme.surfaceVariant : AppTheme.surface,
           ),
-          foregroundColor: danger ? AppTheme.error : AppTheme.text,
+          child: _child,
         ),
-        child: buttonChild,
       );
-    } else {
-      button = ElevatedButton(
-        onPressed: _isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          padding: effectivePadding,
-          backgroundColor: danger ? AppTheme.error : AppTheme.primary,
-          foregroundColor: AppTheme.surface,
-        ),
-        child: buttonChild,
-      );
+      return widget.width != null ? SizedBox(width: widget.width, child: btn) : btn;
     }
 
-    if (width != null) {
-      return SizedBox(width: width, child: button);
-    }
-    return button;
+    final bgNormal  = widget.danger ? AppTheme.error : AppTheme.primary;
+    final bgHovered = widget.danger ? const Color(0xFFDC2626) : AppTheme.primaryDark;
+    final bgColor   = _disabled ? AppTheme.borderStrong : (_hovered ? bgHovered : bgNormal);
+
+    final btn = MouseRegion(
+      cursor: _disabled ? MouseCursor.defer : SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          boxShadow: (!_disabled && _hovered && !widget.danger) ? AppTheme.shadowPrimary : [],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _disabled ? null : widget.onPressed,
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            splashColor: Colors.white.withAlpha(20),
+            highlightColor: Colors.white.withAlpha(10),
+            child: Padding(
+              padding: effectivePadding,
+              child: DefaultTextStyle(
+                style: TextStyle(
+                  color: _disabled ? AppTheme.textMuted : AppTheme.surface,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.1,
+                ),
+                child: IconTheme(
+                  data: IconThemeData(
+                    color: _disabled ? AppTheme.textMuted : AppTheme.surface,
+                    size: 15,
+                  ),
+                  child: _child,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return widget.width != null ? SizedBox(width: widget.width, child: btn) : btn;
   }
 }
 
-// ─── App Card ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// CARD
+// ─────────────────────────────────────────────────────────────────────────────
 
-class AppCard extends StatelessWidget {
+class AppCard extends StatefulWidget {
   final Widget child;
   final EdgeInsets? padding;
   final VoidCallback? onTap;
   final Color? borderColor;
   final double borderWidth;
   final List<BoxShadow>? boxShadow;
+  final bool noPadding;
 
   const AppCard({
     super.key,
@@ -612,40 +769,64 @@ class AppCard extends StatelessWidget {
     this.borderColor,
     this.borderWidth = 1,
     this.boxShadow,
+    this.noPadding = false,
   });
 
   @override
+  State<AppCard> createState() => _AppCardState();
+}
+
+class _AppCardState extends State<AppCard> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 120),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(
-          color: borderColor ?? AppTheme.border,
-          width: borderWidth,
+    final hasInteraction = widget.onTap != null;
+
+    return MouseRegion(
+      cursor: hasInteraction ? SystemMouseCursors.click : MouseCursor.defer,
+      onEnter: hasInteraction ? (_) => setState(() => _hovered = true) : null,
+      onExit: hasInteraction ? (_) => setState(() => _hovered = false) : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border.all(
+            color: widget.borderColor ??
+                (_hovered ? AppTheme.borderStrong : AppTheme.border),
+            width: widget.borderWidth,
+          ),
+          boxShadow: widget.boxShadow ??
+              (_hovered ? AppTheme.shadowMd : AppTheme.shadowSm),
         ),
-        boxShadow: boxShadow ?? AppTheme.shadowSm,
+        clipBehavior: Clip.antiAlias,
+        child: hasInteraction
+            ? InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                splashColor: AppTheme.primary.withAlpha(6),
+                highlightColor: AppTheme.surfaceVariant,
+                child: _content(),
+              )
+            : _content(),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: onTap != null
-          ? InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              child: Padding(
-                padding: padding ?? const EdgeInsets.all(20),
-                child: child,
-              ),
-            )
-          : Padding(
-              padding: padding ?? const EdgeInsets.all(20),
-              child: child,
-            ),
+    );
+  }
+
+  Widget _content() {
+    if (widget.noPadding) return widget.child;
+    return Padding(
+      padding: widget.padding ?? const EdgeInsets.all(20),
+      child: widget.child,
     );
   }
 }
 
-// ─── Section Header ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION HEADER
+// ─────────────────────────────────────────────────────────────────────────────
 
 class SectionHeader extends StatelessWidget {
   final String title;
@@ -672,6 +853,7 @@ class SectionHeader extends StatelessWidget {
               child: Text(
                 title,
                 style: Theme.of(context).textTheme.headlineMedium,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             if (action != null) action!,
@@ -681,7 +863,10 @@ class SectionHeader extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             subtitle!,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppTheme.textMuted),
           ),
         ],
       ],
@@ -689,7 +874,9 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-// ─── Info Row ─────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// INFO ROW
+// ─────────────────────────────────────────────────────────────────────────────
 
 class InfoRow extends StatelessWidget {
   final IconData icon;
@@ -708,30 +895,43 @@ class InfoRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 16, color: iconColor ?? AppTheme.textMuted),
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, size: 14, color: iconColor ?? AppTheme.textMuted),
+          ),
           const SizedBox(width: 10),
           Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: Theme.of(context).textTheme.bodyMedium,
-                children: [
-                  TextSpan(
-                    text: '$label: ',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textSec,
-                    ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 1),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textMuted,
+                    letterSpacing: 0.3,
                   ),
-                  TextSpan(
-                    text: value,
-                    style: TextStyle(color: AppTheme.text),
+                ),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.text,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -740,7 +940,9 @@ class InfoRow extends StatelessWidget {
   }
 }
 
-// ─── Error Banner ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// ERROR BANNER
+// ─────────────────────────────────────────────────────────────────────────────
 
 class AppErrorBanner extends StatelessWidget {
   final String message;
@@ -750,33 +952,407 @@ class AppErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return _AppBanner(
+      message: message,
+      onDismiss: onDismiss,
+      bgColor: AppTheme.errorLight,
+      borderColor: AppTheme.error,
+      iconColor: AppTheme.error,
+      icon: Icons.error_outline_rounded,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CALLOUT  (info / success / warning / error)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AppCalloutType { info, success, warning, error }
+
+class AppCallout extends StatelessWidget {
+  final String message;
+  final String? title;
+  final AppCalloutType type;
+
+  const AppCallout({
+    super.key,
+    required this.message,
+    this.title,
+    this.type = AppCalloutType.info,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color bg, Color border, Color ic, IconData ico) = switch (type) {
+      AppCalloutType.success => (AppTheme.primaryLight,  AppTheme.primary,  AppTheme.primaryDark,  Icons.check_circle_rounded),
+      AppCalloutType.warning => (AppTheme.warningLight,  AppTheme.warning,  AppTheme.accentDark,   Icons.warning_amber_rounded),
+      AppCalloutType.error   => (AppTheme.errorLight,    AppTheme.error,    AppTheme.error,        Icons.error_outline_rounded),
+      AppCalloutType.info    => (AppTheme.infoLight,     AppTheme.info,     AppTheme.info,         Icons.info_outline_rounded),
+    };
+
+    return _AppBanner(
+      message: message,
+      title: title,
+      bgColor: bg,
+      borderColor: border,
+      iconColor: ic,
+      icon: ico,
+    );
+  }
+}
+
+class _AppBanner extends StatelessWidget {
+  final String message;
+  final String? title;
+  final VoidCallback? onDismiss;
+  final Color bgColor;
+  final Color borderColor;
+  final Color iconColor;
+  final IconData icon;
+
+  const _AppBanner({
+    required this.message,
+    this.title,
+    this.onDismiss,
+    required this.bgColor,
+    required this.borderColor,
+    required this.iconColor,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.errorLight,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: AppTheme.error.withOpacity(0.3), width: 1),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: borderColor.withAlpha(60), width: 1),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.error_outline_rounded, color: AppTheme.error, size: 18),
+          Icon(icon, color: iconColor, size: 17),
           const SizedBox(width: 10),
           Expanded(
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppTheme.error,
-                fontWeight: FontWeight.w500,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null) ...[
+                  Text(
+                    title!,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: iconColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                ],
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: iconColor,
+                    fontWeight: FontWeight.w400,
+                    height: 1.4,
+                  ),
+                ),
+              ],
             ),
           ),
-          if (onDismiss != null)
+          if (onDismiss != null) ...[
+            const SizedBox(width: 8),
             GestureDetector(
               onTap: onDismiss,
-              child: Icon(Icons.close, color: AppTheme.error, size: 16),
+              child: Icon(Icons.close, color: iconColor, size: 15),
             ),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TAG / CHIP
+// ─────────────────────────────────────────────────────────────────────────────
+
+class AppTag extends StatelessWidget {
+  final String label;
+  final Color? color;
+  final Color? bgColor;
+  final IconData? icon;
+
+  const AppTag({
+    super.key,
+    required this.label,
+    this.color,
+    this.bgColor,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = color ?? AppTheme.textSec;
+    final bg = bgColor ?? AppTheme.surfaceVariant;
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: icon != null ? 8 : 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        border: Border.all(color: AppTheme.border, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 11, color: textColor),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: textColor,
+              letterSpacing: 0.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DIVIDER WITH LABEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+class AppDividerLabel extends StatelessWidget {
+  final String label;
+  const AppDividerLabel({super.key, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(child: Divider()),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppTheme.textMuted,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+        const Expanded(child: Divider()),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AVATAR
+// ─────────────────────────────────────────────────────────────────────────────
+
+class AppAvatar extends StatelessWidget {
+  final String? name;
+  final String? imageUrl;
+  final double size;
+  final Color? bgColor;
+
+  const AppAvatar({
+    super.key,
+    this.name,
+    this.imageUrl,
+    this.size = 40,
+    this.bgColor,
+  });
+
+  String get _initials {
+    if (name == null || name!.isEmpty) return '?';
+    final parts = name!.trim().split(' ');
+    if (parts.length >= 2) return parts[0][0].toUpperCase() + parts[1][0].toUpperCase();
+    return parts[0][0].toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const palette = [
+      Color(0xFF059669), Color(0xFF3B82F6),
+      Color(0xFFF59E0B), Color(0xFFEF4444), Color(0xFF8B5CF6),
+    ];
+    final idx = (name?.codeUnitAt(0) ?? 0) % palette.length;
+    final bg = bgColor ?? palette[idx].withAlpha(24);
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.border, width: 1.5),
+      ),
+      child: Center(
+        child: Text(
+          _initials,
+          style: TextStyle(
+            fontSize: size * 0.36,
+            fontWeight: FontWeight.w700,
+            color: palette[idx],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGE HEADER
+// ─────────────────────────────────────────────────────────────────────────────
+
+class AppPageHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  final Widget? action;
+
+  const AppPageHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.action,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.3,
+                    ),
+              ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 3),
+                Text(
+                  subtitle!,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: AppTheme.textMuted),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (action != null) ...[
+          const SizedBox(width: 16),
+          action!,
+        ],
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUICK ACTION CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+class QuickActionCard extends StatefulWidget {
+  final String icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const QuickActionCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  State<QuickActionCard> createState() => _QuickActionCardState();
+}
+
+class _QuickActionCardState extends State<QuickActionCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = widget.color ?? AppTheme.primary;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          width: 180,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            border: Border.all(
+              color: _hovered ? accent.withAlpha(80) : AppTheme.border,
+              width: 1,
+            ),
+            boxShadow: _hovered ? AppTheme.shadowMd : AppTheme.shadowSm,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 160),
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _hovered ? accent.withAlpha(28) : AppTheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(widget.icon, style: const TextStyle(fontSize: 18)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.title,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.text,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                widget.subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textMuted,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
