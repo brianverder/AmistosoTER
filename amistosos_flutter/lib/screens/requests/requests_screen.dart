@@ -60,90 +60,88 @@ class _RequestsScreenState extends ConsumerState<RequestsScreen>
     return Padding(
       padding: const EdgeInsets.all(AppConstants.spacingLg),
       child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: SectionHeader(
-                    title: 'SOLICITUDES',
-                    subtitle: 'Encuentra y gestiona partidos amistosos',
-                  ),
-                ),
-                AppButton(
-                  label: '+ NUEVA',
-                  onPressed: () => context.go(AppRoutes.createRequest),
-                ),
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Page header ──────────────────────────────────────────────────
+          AppPageHeader(
+            title: 'Solicitudes',
+            subtitle: 'Encuentra y gestiona partidos amistosos',
+            action: AppButton(
+              label: 'Nueva solicitud',
+              icon: Icons.add_rounded,
+              onPressed: () => context.go(AppRoutes.createRequest),
+            ),
+          ),
+          const SizedBox(height: AppConstants.spacingMd),
+
+          // ── Filters ───────────────────────────────────────────────────────
+          _FilterBar(
+            footballType: _footballTypeFilter,
+            country: _countryFilter,
+            onFootballTypeChanged: (v) {
+              setState(() => _footballTypeFilter = v);
+              _updateFilters();
+            },
+            onCountryChanged: (v) {
+              setState(() => _countryFilter = v);
+              _updateFilters();
+            },
+            onClear: () {
+              setState(() {
+                _footballTypeFilter = null;
+                _countryFilter = null;
+              });
+              ref.read(requestFiltersProvider.notifier).state =
+                  const RequestFilters();
+            },
+          ),
+          const SizedBox(height: AppConstants.spacingMd),
+
+          // ── Tabs ──────────────────────────────────────────────────────────
+          DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(color: AppTheme.border, width: 1),
+              ),
+            ),
+            child: TabBar(
+              controller: _tabCtrl,
+              indicatorColor: AppTheme.primary,
+              indicatorWeight: 2,
+              indicatorSize: TabBarIndicatorSize.label,
+              labelColor: AppTheme.primary,
+              unselectedLabelColor: AppTheme.textMuted,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                letterSpacing: 0.1,
+              ),
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(text: 'Disponibles'),
+                Tab(text: 'Mis solicitudes'),
               ],
             ),
-            const SizedBox(height: AppConstants.spacingMd),
-            // Filters
-            _FilterBar(
-              footballType: _footballTypeFilter,
-              country: _countryFilter,
-              onFootballTypeChanged: (v) {
-                setState(() => _footballTypeFilter = v);
-                _updateFilters();
-              },
-              onCountryChanged: (v) {
-                setState(() => _countryFilter = v);
-                _updateFilters();
-              },
-              onClear: () {
-                setState(() {
-                  _footballTypeFilter = null;
-                  _countryFilter = null;
-                });
-                ref.read(requestFiltersProvider.notifier).state =
-                    const RequestFilters();
-              },
+          ),
+          const SizedBox(height: AppConstants.spacingMd),
+
+          // ── Content ───────────────────────────────────────────────────────
+          Expanded(
+            child: TabBarView(
+              controller: _tabCtrl,
+              children: [
+                _RequestsList(asyncValue: availableAsync, mode: 'available'),
+                _RequestsList(asyncValue: myAsync, mode: 'my'),
+              ],
             ),
-            const SizedBox(height: AppConstants.spacingMd),
-            // Tabs
-            DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: AppTheme.border, width: 1),
-                ),
-              ),
-              child: TabBar(
-                controller: _tabCtrl,
-                indicatorColor: AppTheme.primary,
-                indicatorWeight: 3,
-                labelColor: AppTheme.primary,
-                unselectedLabelColor: AppTheme.textMuted,
-                labelStyle: const TextStyle(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
-                ),
-                tabs: const [
-                  Tab(text: 'Disponibles'),
-                  Tab(text: 'Mis solicitudes'),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppConstants.spacingMd),
-            Expanded(
-              child: TabBarView(
-                controller: _tabCtrl,
-                children: [
-                  _RequestsList(
-                    asyncValue: availableAsync,
-                    mode: 'available',
-                  ),
-                  _RequestsList(
-                    asyncValue: myAsync,
-                    mode: 'my',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+// ─── Filter bar ───────────────────────────────────────────────────────────────
 
 class _FilterBar extends StatelessWidget {
   final String? footballType;
@@ -164,8 +162,8 @@ class _FilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final hasFilters = footballType != null || country != null;
     return Wrap(
-      spacing: AppConstants.spacingSm,
-      runSpacing: AppConstants.spacingSm,
+      spacing: 8,
+      runSpacing: 8,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         _FilterDropdown(
@@ -173,22 +171,47 @@ class _FilterBar extends StatelessWidget {
           value: footballType,
           items: AppConstants.footballTypes,
           onChanged: onFootballTypeChanged,
-          icon: Icons.sports_soccer,
+          icon: Icons.sports_soccer_rounded,
         ),
         _FilterDropdown(
           hint: 'País',
           value: country,
           items: AppConstants.countries,
           onChanged: onCountryChanged,
-          icon: Icons.location_on,
+          icon: Icons.location_on_rounded,
         ),
         if (hasFilters)
-          TextButton.icon(
-            onPressed: onClear,
-            icon: const Icon(Icons.clear, size: 16),
-            label: const Text('LIMPIAR'),
-            style: TextButton.styleFrom(
-              foregroundColor: AppTheme.textMuted,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: onClear,
+              child: Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppTheme.errorLight,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  border: Border.all(
+                    color: AppTheme.error.withAlpha(40),
+                    width: 1,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.close_rounded, size: 13, color: AppTheme.error),
+                    SizedBox(width: 4),
+                    Text(
+                      'Limpiar',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
       ],
@@ -213,38 +236,66 @@ class _FilterDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isActive = value != null;
     return Container(
-      height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 10),
+      height: 36,
+      padding: const EdgeInsets.only(left: 12, right: 8),
       decoration: BoxDecoration(
+        color: isActive ? AppTheme.primaryLight : AppTheme.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         border: Border.all(
-          color: value != null ? AppTheme.text : AppTheme.textMuted,
-          width: value != null ? 2 : 1,
+          color: isActive
+              ? AppTheme.primaryDark.withAlpha(60)
+              : AppTheme.border,
+          width: 1,
         ),
       ),
-      child: DropdownButton<String>(
-        value: value,
-        hint: Row(
-          children: [
-            Icon(icon, size: 14, color: AppTheme.textMuted),
-            const SizedBox(width: 4),
-            Text(hint, style: TextStyle(fontSize: 13, color: AppTheme.textMuted)),
-          ],
-        ),
-        underline: const SizedBox.shrink(),
-        items: items
-            .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-            .toList(),
-        onChanged: onChanged,
-        style: const TextStyle(
-          color: AppTheme.primary,
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isDense: true,
+          hint: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 13, color: AppTheme.textMuted),
+              const SizedBox(width: 5),
+              Text(
+                hint,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          icon: Icon(
+            Icons.keyboard_arrow_down_rounded,
+            size: 16,
+            color: isActive ? AppTheme.primaryDark : AppTheme.textMuted,
+          ),
+          items: items
+              .map((v) => DropdownMenuItem(
+                    value: v,
+                    child: Text(
+                      v,
+                      style: const TextStyle(fontSize: 13, color: AppTheme.text),
+                    ),
+                  ))
+              .toList(),
+          onChanged: onChanged,
+          style: const TextStyle(
+            color: AppTheme.primaryDark,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
   }
 }
+
+// ─── Requests list ────────────────────────────────────────────────────────────
 
 class _RequestsList extends ConsumerWidget {
   final AsyncValue<List<MatchRequestModel>> asyncValue;
@@ -258,25 +309,28 @@ class _RequestsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return asyncValue.when(
-      loading: () => const AppLoadingScreen(),
+      loading: () => const AppSkeletonList(count: 4),
       error: (e, _) => EmptyState(
-        icon: Icons.error_outline,
-        title: 'Error al cargar',
-        subtitle: e.toString(),
+        icon: Icons.error_outline_rounded,
+        title: 'No se pudo cargar',
+        subtitle: 'Inténtalo de nuevo en un momento',
       ),
       data: (requests) {
         if (requests.isEmpty) {
           return EmptyState(
-            icon: Icons.search_off,
+            icon: mode == 'available'
+                ? Icons.search_off_rounded
+                : Icons.assignment_outlined,
             title: mode == 'available'
-                ? 'No hay solicitudes disponibles'
-                : 'No has creado solicitudes',
+                ? 'Sin solicitudes disponibles'
+                : 'Aún no tienes solicitudes',
             subtitle: mode == 'my'
-                ? 'Crea una solicitud para encontrar rivales'
-                : 'Intenta con otros filtros',
+                ? 'Crea una solicitud para encontrar rivales cerca tuyo'
+                : 'Probá ajustando los filtros de búsqueda',
             action: mode == 'my'
                 ? AppButton(
-                    label: '+ CREAR SOLICITUD',
+                    label: 'Crear solicitud',
+                    icon: Icons.add_rounded,
                     onPressed: () => context.go(AppRoutes.createRequest),
                   )
                 : null,
@@ -284,22 +338,20 @@ class _RequestsList extends ConsumerWidget {
         }
         return ListView.separated(
           itemCount: requests.length,
-          separatorBuilder: (_, __) =>
-              const SizedBox(height: AppConstants.spacingSm),
-          itemBuilder: (context, index) {
-            final req = requests[index];
-            return _RequestCard(
-              request: req,
-              mode: mode,
-            );
-          },
+          separatorBuilder: (_, __) => const SizedBox(height: 10),
+          itemBuilder: (context, index) => _RequestCard(
+            request: requests[index],
+            mode: mode,
+          ),
         );
       },
     );
   }
 }
 
-class _RequestCard extends ConsumerWidget {
+// ─── Request card ─────────────────────────────────────────────────────────────
+
+class _RequestCard extends ConsumerStatefulWidget {
   final MatchRequestModel request;
   final String mode;
 
@@ -309,89 +361,178 @@ class _RequestCard extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(currentUserProvider);
-    final isOwner = currentUser?.id == request.userId;
+  ConsumerState<_RequestCard> createState() => _RequestCardState();
+}
 
-    return AppCard(
-      child: InkWell(
-        onTap: () => context.go(
-          AppRoutes.requestDetail.replaceFirst(':id', request.id),
+class _RequestCardState extends ConsumerState<_RequestCard> {
+  bool _hovered = false;
+
+  Color get _accentColor => switch (widget.request.status.name) {
+        'active'    => AppTheme.primary,
+        'matched'   => AppTheme.info,
+        'completed' => AppTheme.textMuted,
+        'cancelled' => AppTheme.error,
+        _           => AppTheme.borderStrong,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final isOwner = currentUser?.id == widget.request.userId;
+    final req = widget.request;
+
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          border: Border(
+            left: BorderSide(color: _accentColor, width: 3),
+            right: BorderSide(
+                color: _hovered ? AppTheme.borderStrong : AppTheme.border),
+            top: BorderSide(
+                color: _hovered ? AppTheme.borderStrong : AppTheme.border),
+            bottom: BorderSide(
+                color: _hovered ? AppTheme.borderStrong : AppTheme.border),
+          ),
+          boxShadow: _hovered ? AppTheme.shadowMd : AppTheme.shadowSm,
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppConstants.spacingMd),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        clipBehavior: Clip.antiAlias,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.go(
+              AppRoutes.requestDetail.replaceFirst(':id', req.id),
+            ),
+            splashColor: AppTheme.primary.withAlpha(6),
+            highlightColor: AppTheme.surfaceVariant,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 18, 16, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      request.team?.name ?? 'Equipo',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
+                  // ── Header ────────────────────────────────────────────────
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      AppAvatar(name: req.team?.name ?? '?', size: 40),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              req.team?.name ?? 'Equipo sin nombre',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                                color: AppTheme.text,
+                                letterSpacing: -0.2,
+                              ),
+                            ),
+                            if (req.footballType != null) ...[
+                              const SizedBox(height: 1),
+                              Text(
+                                'Fútbol ${req.footballType}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: AppTheme.textMuted,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                       ),
-                    ),
+                      StatusBadge(status: req.status.name),
+                      if (isOwner) ...[
+                        const SizedBox(width: 4),
+                        _CardMenu(onDelete: () => _deleteRequest(context)),
+                      ],
+                    ],
                   ),
-                  StatusBadge(status: request.status.name),
-                  if (isOwner)
-                    _CardMenu(
-                      onDelete: () => _deleteRequest(context, ref),
+
+                  // ── Info chips ────────────────────────────────────────────
+                  const SizedBox(height: 14),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (req.country != null && req.country!.isNotEmpty)
+                        AppTag(
+                          label: req.country!,
+                          icon: Icons.location_on_rounded,
+                        ),
+                      if (req.state != null && req.state!.isNotEmpty)
+                        AppTag(
+                          label: req.state!,
+                          icon: Icons.map_outlined,
+                        ),
+                      if (req.matchDate != null)
+                        AppTag(
+                          label:
+                              DateFormat('dd/MM/yyyy').format(req.matchDate!),
+                          icon: Icons.calendar_today_rounded,
+                          color: AppTheme.info,
+                          bgColor: AppTheme.infoLight,
+                        ),
+                      if (req.league != null && req.league!.isNotEmpty)
+                        AppTag(
+                          label: req.league!,
+                          icon: Icons.emoji_events_rounded,
+                          color: AppTheme.accentDark,
+                          bgColor: AppTheme.accentLight,
+                        ),
+                    ],
+                  ),
+
+                  // ── Address ───────────────────────────────────────────────
+                  if (req.fieldAddress != null &&
+                      req.fieldAddress!.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        const Icon(Icons.place_outlined,
+                            size: 12, color: AppTheme.textMuted),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            req.fieldAddress!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textMuted,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
+                  ],
+
+                  // ── Match action ──────────────────────────────────────────
+                  if (widget.mode == 'available' &&
+                      req.status == RequestStatus.active) ...[
+                    const SizedBox(height: 16),
+                    Divider(height: 1, color: AppTheme.border),
+                    const SizedBox(height: 14),
+                    _MatchButton(requestId: req.id),
+                  ],
                 ],
               ),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: AppConstants.spacingSm,
-                runSpacing: 4,
-                children: [
-                  _InfoChip(
-                    icon: Icons.sports_soccer,
-                    label: 'F${request.footballType}',
-                  ),
-                  _InfoChip(
-                    icon: Icons.location_on,
-                    label: request.country ?? '',
-                  ),
-                  if (request.state != null)
-                    _InfoChip(
-                      icon: Icons.map,
-                      label: request.state!,
-                    ),
-                  if (request.matchDate != null)
-                    _InfoChip(
-                      icon: Icons.calendar_today,
-                      label: DateFormat('dd/MM/yyyy')
-                          .format(request.matchDate!),
-                    ),
-                ],
-              ),
-              if (request.fieldAddress != null) ...[
-                const SizedBox(height: 6),
-                Text(
-                  request.fieldAddress!,
-                  style: const TextStyle(
-                    color: AppTheme.textMuted,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-              if (mode == 'available' && request.status == RequestStatus.active)
-                ...[
-                const SizedBox(height: AppConstants.spacingMd),
-                const Divider(height: 1),
-                const SizedBox(height: AppConstants.spacingMd),
-                _MatchButton(requestId: request.id),
-              ],
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Future<void> _deleteRequest(BuildContext context, WidgetRef ref) async {
+  Future<void> _deleteRequest(BuildContext context) async {
     final confirmed = await showConfirmDialog(
       context: context,
       title: 'Eliminar solicitud',
@@ -401,12 +542,14 @@ class _RequestCard extends ConsumerWidget {
     );
     if (confirmed && context.mounted) {
       final service = ref.read(requestsServiceProvider);
-      await service.deleteRequest(request.id);
+      await service.deleteRequest(widget.request.id);
       ref.invalidate(requestsProvider);
       if (context.mounted) showAppToast(context, 'Solicitud eliminada');
     }
   }
 }
+
+// ─── Match button ─────────────────────────────────────────────────────────────
 
 class _MatchButton extends ConsumerStatefulWidget {
   final String requestId;
@@ -424,27 +567,21 @@ class _MatchButtonState extends ConsumerState<_MatchButton> {
     final teamsAsync = ref.watch(teamsNotifierProvider);
     final teams = teamsAsync.value ?? [];
 
-    return Row(
-      children: [
-        if (teams.isNotEmpty) ...[
-          Expanded(
-            child: AppButton(
-              label: _loading ? '...' : 'ACEPTAR PARTIDO',
-              onPressed: _loading
-                  ? null
-                  : () => _showTeamPicker(context, teams),
-              isLoading: _loading,
-            ),
-          ),
-        ] else
-          Text(
-            'Necesitas un equipo para aceptar',
-            style: TextStyle(
-              color: AppTheme.textSec,
-              fontSize: 12,
-            ),
-          ),
-      ],
+    if (teams.isEmpty) {
+      return AppCallout(
+        type: AppCalloutType.warning,
+        message: 'Necesitas tener un equipo para aceptar este partido.',
+      );
+    }
+
+    return SizedBox(
+      width: double.infinity,
+      child: AppButton(
+        label: 'Aceptar partido',
+        icon: Icons.handshake_outlined,
+        onPressed: _loading ? null : () => _showTeamPicker(context, teams),
+        isLoading: _loading,
+      ),
     );
   }
 
@@ -456,17 +593,26 @@ class _MatchButtonState extends ConsumerState<_MatchButton> {
     final picked = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: const RoundedRectangleBorder(),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusXl),
+        ),
         title: const Text(
-          'SELECCIONA TU EQUIPO',
-          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+          'Selecciona tu equipo',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: teams
               .map<Widget>(
                 (team) => ListTile(
-                  title: Text(team.name),
+                  leading: AppAvatar(name: team.name as String, size: 36),
+                  title: Text(
+                    team.name as String,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
                   onTap: () => Navigator.pop(ctx, team.id),
                 ),
               )
@@ -483,42 +629,18 @@ class _MatchButtonState extends ConsumerState<_MatchButton> {
       final service = ref.read(requestsServiceProvider);
       await service.matchRequest(widget.requestId, teamId);
       ref.invalidate(requestsProvider);
-      if (mounted) showAppToast(context, '¡Partido confirmado!');
+      if (mounted) showAppToast(context, '¡Partido confirmado! 🎉');
     } catch (e) {
-      if (mounted) showAppToast(context, 'Error: $e');
+      if (mounted) {
+        showAppToast(context, 'Error: $e', type: AppToastType.error);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 }
 
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  const _InfoChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceVariant,
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 12, color: AppTheme.textMuted),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(fontSize: 11, color: AppTheme.textSec),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ─── Card menu ────────────────────────────────────────────────────────────────
 
 class _CardMenu extends StatelessWidget {
   final VoidCallback onDelete;
@@ -527,12 +649,24 @@ class _CardMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert, size: 18),
-      shape: const RoundedRectangleBorder(),
+      icon: const Icon(Icons.more_vert_rounded, size: 18, color: AppTheme.textMuted),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      ),
+      offset: const Offset(0, 32),
       itemBuilder: (_) => [
         const PopupMenuItem(
           value: 'delete',
-          child: Text('Eliminar', style: TextStyle(color: AppTheme.error)),
+          child: Row(
+            children: [
+              Icon(Icons.delete_outline_rounded, size: 16, color: AppTheme.error),
+              SizedBox(width: 8),
+              Text(
+                'Eliminar',
+                style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
         ),
       ],
       onSelected: (v) {

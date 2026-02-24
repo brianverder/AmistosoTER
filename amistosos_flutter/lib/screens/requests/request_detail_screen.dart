@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants.dart';
+import '../../core/theme.dart';
 import '../../models/match_request_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/requests_provider.dart';
@@ -25,153 +26,48 @@ class RequestDetailScreen extends ConsumerWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 600),
             child: reqAsync.when(
-              loading: () => const AppLoadingScreen(),
+              loading: () => const _DetailSkeleton(),
               error: (e, _) => EmptyState(
-                icon: Icons.error_outline,
-                title: 'Error',
+                icon: Icons.error_outline_rounded,
+                title: 'Error al cargar',
                 subtitle: e.toString(),
               ),
               data: (req) {
                 if (req == null) {
                   return const EmptyState(
-                    icon: Icons.search_off,
+                    icon: Icons.search_off_rounded,
                     title: 'Solicitud no encontrada',
-                    subtitle: '',
+                    subtitle: 'Es posible que haya sido eliminada',
                   );
                 }
 
                 final isOwner = currentUser?.id == req.userId;
-                final canMatch = !isOwner &&
-                    req.status == RequestStatus.active;
+                final canMatch =
+                    !isOwner && req.status == RequestStatus.active;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => context.go(AppRoutes.requests),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            req.team?.name ?? 'Solicitud',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 20,
-                            ),
-                          ),
-                        ),
-                        StatusBadge(status: req.status.name),
-                      ],
-                    ),
+                    // ── Breadcrumb / back nav ──────────────────────────────
+                    _BackNav(teamName: req.team?.name ?? 'Solicitud'),
                     const SizedBox(height: AppConstants.spacingLg),
-                    AppCard(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppConstants.spacingMd),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'DETALLES DEL PARTIDO',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(height: AppConstants.spacingMd),
-                            _DetailRow(
-                              icon: Icons.shield,
-                              label: 'EQUIPO',
-                              value: req.team?.name ?? '—',
-                            ),
-                            _DetailRow(
-                              icon: Icons.sports_soccer,
-                              label: 'MODALIDAD',
-                              value: 'Fútbol ${req.footballType}',
-                            ),
-                            _DetailRow(
-                              icon: Icons.location_on,
-                              label: 'PAÍS',
-                              value: req.country ?? '—',
-                            ),
-                            if (req.state != null)
-                              _DetailRow(
-                                icon: Icons.map,
-                                label: 'ZONA',
-                                value: req.state!,
-                              ),
-                            if (req.fieldAddress != null)
-                              _DetailRow(
-                                icon: Icons.place,
-                                label: 'DIRECCIÓN',
-                                value: req.fieldAddress!,
-                              ),
-                            if (req.fieldPrice != null)
-                              _DetailRow(
-                                icon: Icons.attach_money,
-                                label: 'PRECIO',
-                                value: req.fieldPrice!.toStringAsFixed(0),
-                              ),
-                            if (req.matchDate != null)
-                              _DetailRow(
-                                icon: Icons.calendar_today,
-                                label: 'FECHA',
-                                value: DateFormat('dd/MM/yyyy')
-                                    .format(req.matchDate!),
-                              ),
-                            if (req.league != null)
-                              _DetailRow(
-                                icon: Icons.emoji_events,
-                                label: 'LIGA',
-                                value: req.league!,
-                              ),
-                            if (req.description != null) ...[
-                              const SizedBox(height: AppConstants.spacingSm),
-                              const Text(
-                                'DESCRIPCIÓN',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(req.description!),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
+
+                    // ── Status hero card ───────────────────────────────────
+                    _HeroCard(request: req),
+                    const SizedBox(height: 16),
+
+                    // ── Details card ───────────────────────────────────────
+                    _DetailsCard(request: req),
+
+                    // ── Author card ────────────────────────────────────────
                     if (req.user != null) ...[
-                      const SizedBox(height: AppConstants.spacingMd),
-                      AppCard(
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.all(AppConstants.spacingMd),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'PUBLICADO POR',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 14,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                req.user!.name,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w600),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                      const SizedBox(height: 12),
+                      _AuthorCard(user: req.user!),
                     ],
+
                     const SizedBox(height: AppConstants.spacingLg),
+
+                    // ── Action ────────────────────────────────────────────
                     if (canMatch)
                       _MatchAction(requestId: req.id)
                     else if (isOwner && req.status == RequestStatus.active)
@@ -193,7 +89,7 @@ class RequestDetailScreen extends ConsumerWidget {
     final confirmed = await showConfirmDialog(
       context: context,
       title: 'Eliminar solicitud',
-      message: '¿Confirmar eliminación?',
+      message: '¿Confirmar eliminación? Esta acción no se puede deshacer.',
       confirmLabel: 'ELIMINAR',
       isDanger: true,
     );
@@ -208,6 +104,290 @@ class RequestDetailScreen extends ConsumerWidget {
     }
   }
 }
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+class _DetailSkeleton extends StatelessWidget {
+  const _DetailSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppSkeletonCard(),
+        SizedBox(height: 12),
+        AppSkeletonCard(),
+        SizedBox(height: 12),
+        AppSkeletonList(count: 5),
+      ],
+    );
+  }
+}
+
+// ─── Back navigation ──────────────────────────────────────────────────────────
+
+class _BackNav extends StatelessWidget {
+  final String teamName;
+  const _BackNav({required this.teamName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        InkWell(
+          onTap: () => context.go(AppRoutes.requests),
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppTheme.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            ),
+            child: const Icon(
+              Icons.arrow_back_rounded,
+              size: 16,
+              color: AppTheme.textSec,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () => context.go(AppRoutes.requests),
+          child: const Text(
+            'Solicitudes',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.textMuted,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 6),
+          child: Icon(Icons.chevron_right_rounded,
+              size: 14, color: AppTheme.textMuted),
+        ),
+        Expanded(
+          child: Text(
+            teamName,
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppTheme.text,
+              fontWeight: FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Hero card ────────────────────────────────────────────────────────────────
+
+class _HeroCard extends StatelessWidget {
+  final MatchRequestModel request;
+  const _HeroCard({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          AppAvatar(name: request.team?.name ?? '?', size: 52),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  request.team?.name ?? 'Equipo sin nombre',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.text,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                if (request.footballType != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    'Fútbol ${request.footballType}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textMuted,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          StatusBadge(status: request.status.name),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Details card ─────────────────────────────────────────────────────────────
+
+class _DetailsCard extends StatelessWidget {
+  final MatchRequestModel request;
+  const _DetailsCard({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'DETALLES DEL PARTIDO',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.textMuted,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Location section
+          if (request.country != null)
+            InfoRow(
+              icon: Icons.location_on_rounded,
+              label: 'PAÍS',
+              value: request.country!,
+              iconColor: AppTheme.info,
+            ),
+          if (request.state != null)
+            InfoRow(
+              icon: Icons.map_outlined,
+              label: 'ZONA',
+              value: request.state!,
+            ),
+          if (request.fieldAddress != null)
+            InfoRow(
+              icon: Icons.place_outlined,
+              label: 'DIRECCIÓN',
+              value: request.fieldAddress!,
+            ),
+
+          // Match info
+          if (request.matchDate != null) ...[
+            const SizedBox(height: 4),
+            InfoRow(
+              icon: Icons.calendar_today_rounded,
+              label: 'FECHA',
+              value: DateFormat('EEEE d \'de\' MMMM yyyy').format(request.matchDate!),
+              iconColor: AppTheme.info,
+            ),
+          ],
+          if (request.fieldPrice != null)
+            InfoRow(
+              icon: Icons.payments_outlined,
+              label: 'PRECIO CANCHA',
+              value: '\$${request.fieldPrice!.toStringAsFixed(0)}',
+              iconColor: AppTheme.success,
+            ),
+          if (request.league != null)
+            InfoRow(
+              icon: Icons.emoji_events_rounded,
+              label: 'LIGA',
+              value: request.league!,
+              iconColor: AppTheme.accentDark,
+            ),
+
+          // Description
+          if (request.description != null &&
+              request.description!.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.surfaceVariant,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'DESCRIPCIÓN',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textMuted,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    request.description!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSec,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Author card ──────────────────────────────────────────────────────────────
+
+class _AuthorCard extends StatelessWidget {
+  final dynamic user;
+  const _AuthorCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Row(
+        children: [
+          AppAvatar(name: user.name as String, size: 40),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'PUBLICADO POR',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textMuted,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  user.name as String,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.text,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Match action ─────────────────────────────────────────────────────────────
 
 class _MatchAction extends ConsumerStatefulWidget {
   final String requestId;
@@ -226,34 +406,30 @@ class _MatchActionState extends ConsumerState<_MatchAction> {
     final teams = teamsAsync.value ?? [];
 
     if (teams.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          border: Border.all(color: Colors.orange, width: 2),
-          color: Colors.orange.shade50,
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.warning, color: Colors.orange),
-            const SizedBox(width: 8),
-            const Expanded(
-                child: Text('Necesitas un equipo para aceptar este partido')),
-            TextButton(
-              onPressed: () => context.go(AppRoutes.createTeam),
-              child: const Text('CREAR EQUIPO'),
-            ),
-          ],
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const AppCallout(
+            type: AppCalloutType.warning,
+            message: 'Necesitas crear un equipo para poder aceptar este partido.',
+          ),
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Crear mi equipo',
+            icon: Icons.add_rounded,
+            outlined: true,
+            onPressed: () => context.go(AppRoutes.createTeam),
+          ),
+        ],
       );
     }
 
-    return SizedBox(
+    return AppButton(
+      label: 'Aceptar partido',
+      icon: Icons.handshake_outlined,
+      onPressed: _loading ? null : () => _pick(context, teams),
+      isLoading: _loading,
       width: double.infinity,
-      child: AppButton(
-        label: 'ACEPTAR PARTIDO',
-        onPressed: _loading ? null : () => _pick(context, teams),
-        isLoading: _loading,
-      ),
     );
   }
 
@@ -265,21 +441,34 @@ class _MatchActionState extends ConsumerState<_MatchAction> {
       teamId = await showDialog<String>(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape: const RoundedRectangleBorder(),
-          title: const Text(
-            'SELECCIONA TU EQUIPO',
-            style: TextStyle(fontWeight: FontWeight.w900),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusXl),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: teams
-                .map<Widget>(
-                  (t) => ListTile(
-                    title: Text(t.name),
-                    onTap: () => Navigator.pop(ctx, t.id as String),
-                  ),
-                )
-                .toList(),
+          title: const Text(
+            'Selecciona tu equipo',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          contentPadding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+          content: IntrinsicHeight(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: teams
+                  .map<Widget>(
+                    (t) => ListTile(
+                      leading: AppAvatar(name: t.name as String, size: 36),
+                      title: Text(
+                        t.name as String,
+                        style:
+                            const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      onTap: () => Navigator.pop(ctx, t.id as String),
+                    ),
+                  )
+                  .toList(),
+            ),
           ),
         ),
       );
@@ -291,14 +480,18 @@ class _MatchActionState extends ConsumerState<_MatchAction> {
       await service.matchRequest(widget.requestId, teamId);
       ref.invalidate(requestsProvider);
       ref.invalidate(requestDetailProvider);
-      if (mounted) showAppToast(context, '¡Partido confirmado!');
+      if (mounted) showAppToast(context, '¡Partido confirmado! 🎉');
     } catch (e) {
-      if (mounted) showAppToast(context, 'Error: $e');
+      if (mounted) {
+        showAppToast(context, 'Error: $e', type: AppToastType.error);
+      }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 }
+
+// ─── Delete action ────────────────────────────────────────────────────────────
 
 class _DeleteAction extends StatelessWidget {
   final VoidCallback onDelete;
@@ -306,61 +499,13 @@ class _DeleteAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return AppButton(
+      label: 'Eliminar esta solicitud',
+      icon: Icons.delete_outline_rounded,
+      onPressed: onDelete,
+      outlined: true,
+      danger: true,
       width: double.infinity,
-      child: OutlinedButton(
-        onPressed: onDelete,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Colors.red,
-          side: const BorderSide(color: Colors.red, width: 2),
-          shape: const RoundedRectangleBorder(),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-        ),
-        child: const Text('ELIMINAR SOLICITUD'),
-      ),
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  const _DetailRow({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: Colors.grey),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
