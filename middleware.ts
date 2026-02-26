@@ -5,8 +5,15 @@ import { rateLimitMiddleware } from './lib/rate-limit';
 
 function addCorsHeaders(response: NextResponse, request: NextRequest) {
   const origin = request.headers.get('origin') || '';
-  // Permitir cualquier origen localhost para desarrollo
-  const allowedOrigin = origin.includes('localhost') ? origin : 'http://localhost:3000';
+  // Orígenes permitidos: desarrollo + producción
+  const allowedOrigins = [
+    'https://tercer-tiempo.com',
+    'https://www.tercer-tiempo.com',
+  ];
+  const allowedOrigin = allowedOrigins.includes(origin)
+    ? origin
+    : origin.includes('localhost') ? origin : '';
+  if (!allowedOrigin) return response;
   response.headers.set('Access-Control-Allow-Origin', allowedOrigin);
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS,PATCH');
